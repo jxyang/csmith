@@ -117,11 +117,7 @@ ExpressionComma::get_eval_to_subexps(vector<const Expression*>& subs) const
 void
 ExpressionComma::Output(std::ostream &out) const
 {
-	output_cast(out);
-	Reducer* reducer = CGOptions::get_reducer();
-	if (reducer && reducer->output_expr(this, out)) {
-		return;
-	} 
+	output_cast(out); 
 	out << "(";
 	lhs.Output(out);
 	out << " , ";

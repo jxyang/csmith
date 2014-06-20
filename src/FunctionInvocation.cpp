@@ -59,10 +59,9 @@
 #include "Bookkeeper.h"
 #include "SafeOpFlags.h"
 #include "CVQualifiers.h"
-#include "Error.h"
+
 #include "Probabilities.h"
-#include "CompatibleChecker.h"
-#include "DepthSpec.h"
+#include "CompatibleChecker.h" 
 #include "Constant.h"
 #include "CGOptions.h"
 
@@ -127,7 +126,7 @@ FunctionInvocation::make_random(Function *target,
 {
 	FunctionInvocationUser *fi = new FunctionInvocationUser(target, true, NULL);
 	fi->build_invocation(target, cg_context);
-	ERROR_GUARD_AND_DEL1(NULL, fi);
+	
 	assert(!fi->failed);
 	return fi;
 }
@@ -137,15 +136,14 @@ FunctionInvocation::make_random(Function *target,
  */
 FunctionInvocation *
 FunctionInvocation::make_random_unary(CGContext &cg_context, const Type* type)
-{
-	DEPTH_GUARD_BY_TYPE_RETURN(dtFunctionInvocationRandomUnary, NULL);
+{ 
 	assert(type);
 	eUnaryOps op = (eUnaryOps)(rnd_upto(MAX_UNARY_OP, UNARY_OPS_PROB_FILTER));
-	ERROR_GUARD(NULL);
+	
 	SafeOpFlags *flags = NULL;
 	if (op == eMinus) {
 		flags = SafeOpFlags::make_random(sOpUnary);
-		ERROR_GUARD(NULL);
+		
 		type = flags->get_lhs_type();
 		assert(type);
 	}
@@ -153,7 +151,7 @@ FunctionInvocation::make_random_unary(CGContext &cg_context, const Type* type)
 	FunctionInvocation *fi = FunctionInvocationUnary::CreateFunctionInvocationUnary(cg_context, op, flags);
 
 	Expression *operand = Expression::make_random(cg_context, type);
-	ERROR_GUARD_AND_DEL1(NULL, fi);
+	
 
 	fi->param_value.push_back(operand);
 	return fi;
@@ -164,19 +162,18 @@ FunctionInvocation::make_random_unary(CGContext &cg_context, const Type* type)
  */
 FunctionInvocation *
 FunctionInvocation::make_random_binary(CGContext &cg_context, const Type* type)
-{
-	DEPTH_GUARD_BY_TYPE_RETURN(dtFunctionInvocationRandomBinary, NULL);
+{ 
 	if (rnd_flipcoin(10) && Type::has_pointer_type()) {
-		ERROR_GUARD(NULL);
+		
 		return make_random_binary_ptr_comparison(cg_context);
 	}
 
 	eBinaryOps op = (eBinaryOps)(rnd_upto(MAX_BINARY_OP, BINARY_OPS_PROB_FILTER));
-	ERROR_GUARD(NULL);
+	
 	assert(type);
 	SafeOpFlags *flags = SafeOpFlags::make_random(sOpBinary, op);
 	assert(flags);
-	ERROR_GUARD(NULL);
+	
 	FunctionInvocationBinary *fi = FunctionInvocationBinary::CreateFunctionInvocationBinary(cg_context, op, flags);
 
 	Effect lhs_eff_accum;
@@ -187,7 +184,7 @@ FunctionInvocation::make_random_binary(CGContext &cg_context, const Type* type)
 	const Type* rhs_type = flags->get_rhs_type();
 	assert(lhs_type && rhs_type);
 	Expression *lhs = Expression::make_random(lhs_cg_context, lhs_type); 
-	ERROR_GUARD_AND_DEL1(NULL, fi);
+	
 	Expression *rhs = 0;
 
 	cg_context.merge_param_context(lhs_cg_context, true);
@@ -235,12 +232,9 @@ FunctionInvocation::make_random_binary(CGContext &cg_context, const Type* type)
 			}
 		}
 		cg_context.merge_param_context(rhs_cg_context, true);
-	}
+	} 
 
-	ERROR_GUARD_AND_DEL2(NULL, fi, lhs);
-
-	if (CompatibleChecker::compatible_check(lhs, rhs)) {
-		Error::set_error(COMPATIBLE_CHECK_ERROR);
+	if (CompatibleChecker::compatible_check(lhs, rhs)) { 
 		delete lhs;
 		delete rhs;
 		delete fi;
@@ -266,19 +260,19 @@ FunctionInvocation *
 FunctionInvocation::make_random_binary_ptr_comparison(CGContext &cg_context)
 {
 	eBinaryOps op = rnd_flipcoin(50) ? eCmpEq : eCmpNe;   
-	ERROR_GUARD(NULL);
+	
 	SafeOpFlags *flags = SafeOpFlags::make_random(sOpBinary);
-	ERROR_GUARD(NULL);
+	
 
 	FunctionInvocation *fi = FunctionInvocationBinary::CreateFunctionInvocationBinary(cg_context, op, flags);
 	const Type* type = Type::choose_random_pointer_type();  
-	ERROR_GUARD_AND_DEL1(NULL, fi);
+	
 
 	Effect lhs_eff_accum;
 	CGContext lhs_cg_context(cg_context, cg_context.get_effect_context(), &lhs_eff_accum);
 	lhs_cg_context.flags |= NO_DANGLING_PTR;
 	Expression *lhs = Expression::make_random(lhs_cg_context, type, 0, true);
-	ERROR_GUARD_AND_DEL1(NULL, fi);
+	
 	cg_context.merge_param_context(lhs_cg_context, true);
 
 	// now focus on RHS ...
@@ -311,7 +305,7 @@ FunctionInvocation::make_random_binary_ptr_comparison(CGContext &cg_context)
 		rhs = Expression::make_random(rhs_cg_context, type, 0, true, false, tt);
 		cg_context.merge_param_context(rhs_cg_context, true);
 	}
-	ERROR_GUARD_AND_DEL2(NULL, fi, lhs);
+	
 
 	// typecast, if needed.
 	rhs->check_and_set_cast(&lhs->get_type());
@@ -541,10 +535,9 @@ FunctionInvocation::visit_facts(vector<const Fact*>& inputs, CGContext& cg_conte
 FunctionInvocation *
 FunctionInvocation::make_unary(CGContext &cg_context, eUnaryOps op,
 							   Expression *operand)
-{
-	DEPTH_GUARD_BY_TYPE_RETURN(dtFunctionInvocationUnary, NULL);
+{ 
 	SafeOpFlags *flags = SafeOpFlags::make_random(sOpUnary);
-	ERROR_GUARD(NULL);
+	
 	FunctionInvocation *fi = FunctionInvocationUnary::CreateFunctionInvocationUnary(cg_context, op, flags);
 	fi->param_value.push_back(operand);
 
@@ -557,10 +550,9 @@ FunctionInvocation::make_unary(CGContext &cg_context, eUnaryOps op,
 FunctionInvocation *
 FunctionInvocation::make_binary(CGContext &cg_context, eBinaryOps op,
 								Expression *lhs, Expression *rhs)
-{
-	DEPTH_GUARD_BY_TYPE_RETURN(dtFunctionInvocationBinary, NULL);
+{ 
 	SafeOpFlags *flags = SafeOpFlags::make_random(sOpBinary);
-	ERROR_GUARD(NULL);
+	
 	FunctionInvocation *fi = FunctionInvocationBinary::CreateFunctionInvocationBinary(cg_context, op, flags);
 	fi->param_value.push_back(lhs);
 	fi->param_value.push_back(rhs);

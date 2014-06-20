@@ -51,12 +51,11 @@
 #include "ExpressionVariable.h" // temporary; don't want to depend on subclass!
 #include "ExpressionAssign.h"
 #include "ExpressionComma.h"
-#include "Error.h"
+
 #include "ProbabilityTable.h"
 #include "PartialExpander.h"
 #include "random.h"
-#include "CVQualifiers.h"
-#include "DepthSpec.h"
+#include "CVQualifiers.h" 
 
 int eid = 0;
 
@@ -112,8 +111,7 @@ ExpressionTypeProbability(const VectorFilter *filter)
 
 	assert(filter);
 
-	int i = rnd_upto(filter->get_max_prob(), filter);
-	ERROR_GUARD(MAX_TERM_TYPES);
+	int i = rnd_upto(filter->get_max_prob(), filter); 
 	return (eTermType)(filter->lookup(i));
 }
 
@@ -153,8 +151,7 @@ Expression::indented_output(std::ostream &out, int indent) const
  */
 Expression *
 Expression::make_random(CGContext &cg_context, const Type* type, const CVQualifiers* qfer, bool no_func, bool no_const, enum eTermType tt)
-{
-	DEPTH_GUARD_BY_TYPE_RETURN_WITH_FLAG(dtExpression, tt, NULL);
+{ 
 	Expression *e = 0;  
 	if (type == NULL) {
 		do { 
@@ -189,7 +186,7 @@ Expression::make_random(CGContext &cg_context, const Type* type, const CVQualifi
 		tt = ExpressionTypeProbability(&filter); 
 	}
 	    
-	ERROR_GUARD(NULL);
+	
 
 	switch (tt) {
 	case eConstant:
@@ -222,7 +219,7 @@ Expression::make_random(CGContext &cg_context, const Type* type, const CVQualifi
 		(e->get_invoke() && e->get_invoke()->invoke_type == eFuncCall)) {
 		cg_context.expr_depth++;
 	}
-	ERROR_GUARD(NULL);
+	
 	return e;
 }
 
@@ -237,7 +234,7 @@ Expression::check_and_set_cast(const Type* type)
 void
 Expression::output_cast(std::ostream& out) const
 {
-	if((CGOptions::ccomp() || CGOptions::lang_cpp()) && (cast_type != NULL)) {
+	if((CGOptions::lang_cpp()) && (cast_type != NULL)) {
 		out << "(";
 		cast_type->Output(out);
 		out << ") ";
@@ -249,8 +246,7 @@ Expression::output_cast(std::ostream& out) const
  */
 Expression *
 Expression::make_random_param(CGContext &cg_context, const Type* type, const CVQualifiers* qfer, enum eTermType tt)
-{
-	DEPTH_GUARD_BY_TYPE_RETURN_WITH_FLAG(dtExpressionRandomParam, tt, NULL);
+{ 
 	Expression *e = 0;  
 	assert(type);
 	// if a term type is provided, no need to choose random term type
@@ -270,7 +266,7 @@ Expression::make_random_param(CGContext &cg_context, const Type* type, const CVQ
 		tt = ExpressionTypeProbability(&filter);
 	}
 	 
-	ERROR_GUARD(NULL);
+	
 
 	switch (tt) {
 	case eConstant:
@@ -297,7 +293,7 @@ Expression::make_random_param(CGContext &cg_context, const Type* type, const CVQ
 		(e->get_invoke() && e->get_invoke()->invoke_type == eFuncCall)) {
 		cg_context.expr_depth++;
 	}
-	ERROR_GUARD(NULL);
+	
 	return e;
 }
 

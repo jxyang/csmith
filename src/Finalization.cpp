@@ -37,7 +37,6 @@
 #include "Bookkeeper.h"
 #include "Probabilities.h"
 #include "StatementGoto.h"
-#include "ExtensionMgr.h"
 
 void
 Finalization::doFinalization()
@@ -50,6 +49,5 @@ Finalization::doFinalization()
 	FunctionInvocationUser::doFinalization();
 	Probabilities::DestroyInstance();
 	StatementGoto::doFinalization();
-	ExtensionMgr::DestroyExtension();
 }
 

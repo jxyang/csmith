@@ -32,9 +32,7 @@
 #include <cassert>
 #include <iostream>
 #include <string>
-#include "LinearSequence.h"
-#include "SimpleDeltaSequence.h"
-#include "DeltaMonitor.h"
+#include "LinearSequence.h" 
 
 std::set<Sequence*> SequenceFactory::seqs_;
 
@@ -45,14 +43,8 @@ SequenceFactory::make_sequence()
 {
 	Sequence *seq = NULL;
 
-	if (DeltaMonitor::is_running()) {
-		seq = DeltaMonitor::GetSequence();
-		current_sep_char_ = DeltaMonitor::GetSepChar();
-	}
-	else {
-		seq = new LinearSequence(LinearSequence::default_sep_char);
-		current_sep_char_ = LinearSequence::default_sep_char;
-	}
+	seq = new LinearSequence(LinearSequence::default_sep_char);
+	current_sep_char_ = LinearSequence::default_sep_char; 
 
 	assert(seq);
 	seqs_.insert(seq);

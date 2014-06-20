@@ -46,10 +46,9 @@
 #include "FactMgr.h"
 #include "Lhs.h"
 #include "SafeOpFlags.h"
-#include "Error.h"
+
 #include "PartialExpander.h"
-#include "Bookkeeper.h"
-#include "DepthSpec.h"
+#include "Bookkeeper.h" 
 #include "StatementBreak.h"
 #include "CFGEdge.h"
 
@@ -77,17 +76,17 @@ make_random_loop_control(int &init, int &limit, int &incr,
 
 	eBinaryOps t_ops[] = { eCmpLt, eCmpLe, eCmpGt, eCmpGe, eCmpEq, eCmpNe };
 	test_op = t_ops[pure_rnd_upto(sizeof(t_ops)/sizeof(*t_ops))];
-	ERROR_RETURN();
+	
 
 	if (pure_rnd_flipcoin(50)) {
-		ERROR_RETURN();
+		
 		// Do `+=' or `-=' by an increment between 0 and 9 inclusive.
 		// make sure the limit can be reached without wrap-around
 		incr_op = (limit >= init) ? eAddAssign : eSubAssign; 
 		incr = pure_rnd_upto(10);
 		if (incr == 0) incr = 1;
 	} else {
-		ERROR_RETURN();
+		
 		// Do `++' or `--', pre- or post-.
 		// make sure the limit can be reached without wrap-around
 		if (limit >= init) {
@@ -104,7 +103,7 @@ make_random_loop_control(int &init, int &limit, int &incr,
 		}
 		incr = 1;
 	}
-	ERROR_RETURN();
+	
 }
 
 /*
@@ -152,7 +151,7 @@ StatementFor::make_iteration(CGContext& cg_context, StatementAssign*& init, Expr
 	Variable *var = NULL;
 	do {
 		var = VariableSelector::SelectLoopCtrlVar(cg_context, invalid_vars); 
-		ERROR_GUARD(NULL);
+		
 		if (var->is_volatile()) { 
 			invalid_vars.push_back(var);
 		} else {
@@ -191,21 +190,21 @@ StatementFor::make_iteration(CGContext& cg_context, StatementAssign*& init, Expr
 		assert(var->type);
 		make_random_loop_control(init_n, limit_n, incr_n, test_op, incr_op, var->type->is_signed());
 	}
-	ERROR_GUARD(NULL);
+	
 
 	// Build the IR for the subparts of the loop.
 	Constant * c_init = Constant::make_int(init_n);
-	ERROR_GUARD(NULL);
+	
 
 	// if we chose control variable wisely, this should never return false
 	assert(var);
 	Lhs* lhs = new Lhs(*var);
-	ERROR_GUARD_AND_DEL1(NULL, c_init);
+	
 	SafeOpFlags *flags1 = SafeOpFlags::make_random(sOpAssign);
-	ERROR_GUARD_AND_DEL2(NULL, c_init, lhs);
+	
 
 	init = new StatementAssign(cg_context.get_current_block(), *lhs, *c_init, eSimpleAssign, flags1);
-	ERROR_GUARD_AND_DEL3(NULL, c_init, lhs, flags1);
+	
 	assert(init->visit_facts(fm->global_facts, cg_context));
 
 	assert(var);
@@ -214,10 +213,10 @@ StatementFor::make_iteration(CGContext& cg_context, StatementAssign*& init, Expr
 	Bookkeeper::record_volatile_access(v->get_var(), v->get_indirect_level(), true);
 
 	Constant *c_limit = Constant::make_int(limit_n);
-	ERROR_GUARD_AND_DEL2(NULL, init, v);
+	
 
 	FunctionInvocation *invocation = FunctionInvocation::make_binary(cg_context, test_op, v, c_limit);
-	ERROR_GUARD_AND_DEL3(NULL, init, v, c_limit);
+	
 
 	test = new ExpressionFuncall(*invocation);
 
@@ -227,10 +226,10 @@ StatementFor::make_iteration(CGContext& cg_context, StatementAssign*& init, Expr
 	//const ExpressionFuncall funcall(fb); 
 	Lhs *lhs1 = dynamic_cast<Lhs*>(lhs->clone());
 	//SafeOpFlags *flags2 = SafeOpFlags::make_random(sOpAssign);
-	ERROR_GUARD_AND_DEL3(NULL, init, test, lhs1);
+	
 
 	Constant * c_incr = Constant::make_int(incr_n);
-	ERROR_GUARD_AND_DEL3(NULL, init, test, lhs1);
+	
 
 	if (bound != INVALID_BOUND) {
 		incr = new StatementAssign(cg_context.get_current_block(), *lhs1, *c_incr, incr_op);
@@ -262,7 +261,7 @@ StatementFor::make_random(CGContext &cg_context)
 	// create CGContext for body
 	CGContext body_cg_context(cg_context, cg_context.rw_directive, iv, bound);  
 	Block *body = Block::make_random(body_cg_context, true);
-	ERROR_GUARD_AND_DEL3(NULL, init, test, incr);
+	
 
 	StatementFor* sf = new StatementFor(cg_context.get_current_block(), *init, *test, *incr, *body);
 	sf->post_loop_analysis(cg_context, pre_facts, pre_effects);

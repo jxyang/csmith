@@ -39,7 +39,6 @@
 #include "Function.h"
 #include "VariableSelector.h"
 #include "CGContext.h"
-#include "ExtensionMgr.h"
 #include "Constant.h"
 #include "ArrayVariable.h"
 #include "random.h"
@@ -97,6 +96,18 @@ OutputMgr::~OutputMgr()
 }
 
 void
+OutputMgr::OutputMainHeader(std::ostream &out)
+{
+	if (CGOptions::accept_argc()) {
+		out << "int main (int argc, char* argv[])" << endl;
+	}
+	else {
+		out << "int main (void)" << endl;
+	}
+	out << "{" << endl;
+}
+
+void
 OutputMgr::OutputMain(std::ostream &out)
 {
 	CGContext cg_context(GetFirstFunction() /* BOGUS -- not in first func. */,
@@ -104,17 +115,20 @@ OutputMgr::OutputMain(std::ostream &out)
 						 0);
 	
 	FunctionInvocation *invoke = NULL;
-	invoke = ExtensionMgr::MakeFuncInvocation(GetFirstFunction(), cg_context);
+	invoke = FunctionInvocation::make_random(GetFirstFunction(), cg_context);
 	out << endl << endl;
 	output_comment_line(out, "----------------------------------------");
 
-	ExtensionMgr::OutputInit(out);
+	OutputMainHeader(out);
 
 	// output initializers for global array variables
 	OutputArrayInitializers(*VariableSelector::GetGlobalVariables(), out, 1);
 
 	if (CGOptions::blind_check_global()) {
-		ExtensionMgr::OutputFirstFunInvocation(out, invoke);
+		out << "    ";
+        invoke->Output(out);
+        out << ";" << endl;
+
 		std::vector<Variable *>& vars = *VariableSelector::GetGlobalVariables();
 		for (size_t i=0; i<vars.size(); i++) {
 			vars[i]->output_value_dump(out, "checksum ", 1);
@@ -132,13 +146,10 @@ OutputMgr::OutputMain(std::ostream &out)
 			out << "    crc32_gentab();" << endl;
 		}
 
-		ExtensionMgr::OutputFirstFunInvocation(out, invoke);
-
-	#if 0
 		out << "    ";
-		invoke->Output(out);
-		out << ";" << endl;
-	#endif 
+        invoke->Output(out);
+        out << ";" << endl; 
+
 		// resetting all global dangling pointer to null per Rohit's request
 		if (!CGOptions::dangling_global_ptrs()) {
 			OutputPtrResets(out, GetFirstFunction()->dead_globals);
@@ -154,7 +165,7 @@ OutputMgr::OutputMain(std::ostream &out)
 			out << "    platform_main_end(0,0);" << endl;
 		}
 	}
-	ExtensionMgr::OutputTail(out);
+	out << "    return 0;" << endl;
 	out << "}" << endl;
 	delete invoke;
 }
@@ -285,9 +296,7 @@ OutputMgr::OutputHeader(int argc, char *argv[], unsigned long seed)
 		out << endl;
 		out << "#define NO_LONGLONG" << std::endl;
 		out << endl;
-	}
-
-	ExtensionMgr::OutputHeader(out);
+	} 
 
 	out << runtime_include << endl;
 

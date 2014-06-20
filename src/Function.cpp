@@ -58,9 +58,7 @@
 #include "FactPointTo.h"
 #include "FactMgr.h"
 #include "VectorFilter.h"
-#include "Error.h"
-#include "DepthSpec.h"
-#include "ExtensionMgr.h"
+
 #include "OutputMgr.h"
 
 using namespace std;
@@ -358,7 +356,7 @@ static void
 GenerateParameterList(Function &curFunc)
 {
 	unsigned int max = ParamListProbability();
-	ERROR_RETURN();
+	
 
 	for (unsigned int i =0; i <= max; i++) {
 		// With some probability, choose a new random variable, or one from
@@ -368,7 +366,7 @@ GenerateParameterList(Function &curFunc)
 		// it onto the back.
 		//
 		VariableSelector::GenerateParameterVariable(curFunc);
-		ERROR_RETURN();
+		
 	}
 }
 
@@ -407,17 +405,15 @@ Function *
 Function::make_random_signature(const CGContext& cg_context, const Type* type, const CVQualifiers* qfer)
 {
 	if (type == 0)
-		type = RandomReturnType();
-
-	DEPTH_GUARD_BY_TYPE_RETURN(dtFunction, NULL);
-	ERROR_GUARD(NULL);
+		type = RandomReturnType(); 
+	
 	Function *f = new Function(RandomFunctionName(), type);
 		
 	// dummy variable representing return variable, we don't care about the type, so use 0
 	string rvname = f->name + "_" + "rv";
 	CVQualifiers ret_qfer = qfer==0 ? CVQualifiers::random_qualifiers(type, Effect::READ, cg_context, true) 
 		                            : qfer->random_qualifiers(true, Effect::READ, cg_context);
-	ERROR_GUARD(NULL);
+	
 	f->rv = Variable::CreateVariable(rvname, type, NULL, &ret_qfer);
 	GenerateParameterList(*f); 
 	FMList.push_back(new FactMgr(f));
@@ -433,9 +429,9 @@ Function *
 Function::make_random(const CGContext& cg_context, const Type* type, const CVQualifiers* qfer)
 {
 	Function* f = make_random_signature(cg_context, type, qfer); 
-	ERROR_GUARD(NULL);
+	
 	f->GenerateBody(cg_context);
-	ERROR_GUARD(NULL);
+	
 	return f;
 }
 
@@ -446,20 +442,18 @@ Function *
 Function::make_first(void)
 {
 	const Type *ty = RandomReturnType();
-	ERROR_GUARD(NULL);
+	
 
 	Function *f = new Function(RandomFunctionName(), ty);
 	// dummy variable representing return variable, we don't care about the type, so use 0
 	string rvname = f->name + "_" + "rv"; 
 	CVQualifiers ret_qfer = CVQualifiers::random_qualifiers(ty); 
-	ERROR_GUARD(NULL);
+	
 	f->rv = Variable::CreateVariable(rvname, ty, NULL, &ret_qfer);
 
 	// create a fact manager for this function, with empty global facts 
 	FactMgr* fm = new FactMgr(f);
 	FMList.push_back(fm);
-
-	ExtensionMgr::GenerateFirstParameterList(*f);
 
 	// No Parameter List
 	f->GenerateBody(CGContext::get_empty_context());
@@ -604,7 +598,7 @@ Function::make_return_const()
 		if (return_type->eType == eSimple)
 			assert(return_type->simple_type != eVoid);
 		Constant *c = Constant::make_random(return_type);
-		ERROR_RETURN();		
+				
 		this->ret_c = c;
 	}
 }
@@ -640,7 +634,7 @@ Function::GenerateBody(const CGContext &prev_context)
 		body = Block::make_dummy_block(cg_context);
 	else
 		body = Block::make_random(cg_context); 
-	ERROR_RETURN();
+	
 	body->set_depth_protect(true);
 
 	// compute the pointers that are statically referenced in the function
@@ -653,7 +647,7 @@ Function::GenerateBody(const CGContext &prev_context)
 	feffect.add_external_effect(fm->map_stm_effect[body]);
 	
 	make_return_const();
-	ERROR_RETURN();
+	
 	
 	// Mark this function as built.
 	build_state = BUILT;
@@ -682,13 +676,13 @@ Function::generate_body_with_known_params(const CGContext &prev_context, Effect&
 
 	// Fill in the Function body. 
 	body = Block::make_random(cg_context); 
-	ERROR_RETURN();
+	
 	body->set_depth_protect(true);
 
 	compute_summary();
 	
 	make_return_const();
-	ERROR_RETURN();
+	
 	
 	// Mark this function as built.
 	build_state = BUILT;
@@ -799,7 +793,7 @@ GenerateFunctions(void)
 	// -----------------
 	// Create a basic first function, then generate a random graph from there.
 	/* Function *first = */ Function::make_first();
-	ERROR_RETURN();
+	
 	
 	// -----------------
 	// Create body of each function, continue until no new functions are created.
@@ -807,11 +801,10 @@ GenerateFunctions(void)
 		// Dynamically adds new functions to the end of the list..
 		if (FuncList[cur_func_idx]->is_built() == false) {
 			FuncList[cur_func_idx]->GenerateBody(CGContext::get_empty_context());
-			ERROR_RETURN();
+			
 		}
 	}
 	FactPointTo::aggregate_all_pointto_sets();
-	ExtensionMgr::GenerateValues();
 }
 
 /*

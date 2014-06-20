@@ -32,8 +32,7 @@
 
 #include <string>
 #include <vector>
-#include <map>
-#include "Reducer.h"
+#include <map> 
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -44,9 +43,7 @@ using namespace std;
  * "static const int" still needs declared storage, so use #define's instead.
  */
 #define CGOPTIONS_DEFAULT_MAX_FUNCS			(10)
-#define CGOPTIONS_DEFAULT_MAX_PARAMS		(5)
-#define CGOPTIONS_DEFAULT_FUNC1_MAX_PARAMS		(3)
-#define CGOPTIONS_DEFAULT_COVERAGE_TEST_SIZE	(500)
+#define CGOPTIONS_DEFAULT_MAX_PARAMS		(5) 
 #define CGOPTIONS_DEFAULT_MAX_BLOCK_SIZE	(4)
 #define CGOPTIONS_DEFAULT_MAX_BLOCK_DEPTH	(5)
 #define CGOPTIONS_DEFAULT_MAX_EXPR_DEPTH	(10)
@@ -57,11 +54,8 @@ using namespace std;
 #define CGOPTIONS_DEFAULT_MAX_ARRAY_DIMENSIONS	(3) 
 #define CGOPTIONS_DEFAULT_MAX_ARRAY_LENGTH_PER_DIMENSION (10)
 #define CGOPTIONS_DEFAULT_MAX_ARRAY_LENGTH	(256)
-#define CGOPTIONS_DEFAULT_MAX_ARRAY_NUM_IN_LOOP	(4)
-#define CGOPTIONS_DEFAULT_MAX_EXHAUSTIVE_DEPTH	(-1) 
-// 0 means we output to the standard output
-#define CGOPTIONS_DEFAULT_MAX_SPLIT_FILES	(0)
-#define CGOPTIONS_DEFAULT_SPLIT_FILES_DIR	("./output") 
+#define CGOPTIONS_DEFAULT_MAX_ARRAY_NUM_IN_LOOP	(4)  
+// 0 means we output to the standard output 
 #define CGOPTIONS_DEFAULT_OUTPUT_FILE		("")
 #define PLATFORM_CONFIG_FILE                ("platform.info")
 
@@ -74,13 +68,7 @@ public:
 	static bool compute_hash(bool p);
 
 	static bool depth_protect(void);
-	static bool depth_protect(bool p);
-
-	static int max_split_files(void);
-	static int max_split_files(int p);
-
-	static std::string split_files_dir(void);
-	static std::string split_files_dir(std::string p);
+	static bool depth_protect(bool p); 
 
 	static std::string output_file(void);
 	static std::string output_file(std::string p);
@@ -117,9 +105,6 @@ public:
 
 	static int max_nested_struct_level();
 	static int max_nested_struct_level(int p);
-
-	static std::string struct_output();
-	static std::string struct_output(std::string p);
 
 	static bool fixed_struct_fields();
 	static bool fixed_struct_fields(bool p);
@@ -163,50 +148,8 @@ public:
 	static bool nomain(void);
 	static bool nomain(bool p);
 
-	static bool random_based(void);
-	static bool random_based(bool p);
-
-	static bool dfs_exhaustive(void);
-	static bool dfs_exhaustive(bool p);
-
 	static std::string dfs_debug_sequence(void);
-	static std::string dfs_debug_sequence(std::string p);
-
-	static int max_exhaustive_depth(void);
-	static int max_exhaustive_depth(int p);
-
-	static bool compact_output(void);
-	static bool compact_output(bool p);
-
-	static bool msp(void);
-	static bool msp(bool p);
-
-	static int func1_max_params(void);
-	static int func1_max_params(int p);
-
-	static bool splat(void);
-	static bool splat(bool p);
-
-	static bool klee(void);
-	static bool klee(bool p);
-
-	static bool crest(void);
-	static bool crest(bool p);
-
-	static bool ccomp(void);
-	static bool ccomp(bool p);
-
-	static bool coverage_test(void);
-	static bool coverage_test(bool p);
-
-	static int coverage_test_size(void);
-	static int coverage_test_size(int p);
-
-	static bool prefix_name(void);
-	static bool prefix_name(bool p);
-
-	static bool sequence_name_prefix(void);
-	static bool sequence_name_prefix(bool p);
+	static std::string dfs_debug_sequence(std::string p);  
 
 	static bool compatible_check(void);
 	static bool compatible_check(bool p);
@@ -218,22 +161,7 @@ public:
 	static bool bitfields(bool p);
 
 	static std::string partial_expand(void);
-	static std::string partial_expand(std::string p);
-
-	static std::string delta_monitor(void);
-	static std::string delta_monitor(std::string p);
-
-	static std::string delta_output(void);
-	static std::string delta_output(std::string p);
-
-	static std::string go_delta(void);
-	static std::string go_delta(std::string p);
-
-	static std::string delta_input(void);
-	static std::string delta_input(std::string p);
-
-	static bool no_delta_reduction(void);
-	static bool no_delta_reduction(bool p);
+	static std::string partial_expand(std::string p);  
 
 	static bool math_notmp(void);
 	static bool math_notmp(bool p);
@@ -361,12 +289,9 @@ public:
 	static void set_default_settings(void);
 
 	static bool has_conflict(void);
-	static bool has_random_based_conflict(void);
 	static const std::string& conflict_msg(void);
 
-	static bool is_random(void);
-
-	static bool has_extension_support();
+	static bool is_random(void) { return true;}; 
 
 	static bool allow_int64();
 
@@ -374,10 +299,7 @@ public:
 	static bool match_exact_qualifiers(bool p);
 
 	static int max_array_num_in_loop();
-	static int max_array_num_in_loop(int p);
-
-	static void init_reducer(std::string fname) { reducer_ = new Reducer(fname);}
-	static Reducer* get_reducer(void) { return reducer_; } 
+	static int max_array_num_in_loop(int p); 
 
 	static bool x86_64();
 
@@ -456,22 +378,14 @@ public:
 private:
 	static bool enabled_builtin_kind(const string &kind);
 
-	static void set_default_builtin_kinds();
-
-	static bool resolve_exhaustive_options();
-
-	static bool has_delta_conflict();
-
-	static bool has_extension_conflict();
+	static void set_default_builtin_kinds();  
 
 	static void parse_string_options(string vname, vector<std::string> &v);
 
 	// Until I do this right, just make them all static.
 	static bool	compute_hash_;
 	static bool	depth_protect_;
-	static int	max_funcs_;
-	static int	max_split_files_;
-	static std::string split_files_dir_;
+	static int	max_funcs_; 
 	static std::string output_file_;
 	static int	max_params_;
 	static int	max_block_size_;
@@ -502,30 +416,13 @@ private:
 	static bool deputy_;
 	static bool step_hash_by_stmt_;
 	static bool blind_check_global_;
-	static bool	random_based_;
-	static bool	dfs_exhaustive_;
-	static std::string dfs_debug_sequence_;
-	static int	max_exhaustive_depth_;
-	static bool	compact_output_;
-	static bool	msp_;
-	static int	func1_max_params_;
-	static bool	splat_;
-	static bool	klee_;
-	static bool	crest_;
-	static bool	ccomp_;
-	static bool	coverage_test_;
-	static int	coverage_test_size_;
+	static std::string dfs_debug_sequence_;  
+	static int	func1_max_params_; 
 	static bool	packed_struct_;
 	static bool	bitfields_;
-	static bool	prefix_name_;
 	static bool	sequence_name_prefix_;
 	static bool	compatible_check_;
-	static std::string	partial_expand_;
-	static std::string	delta_monitor_;
-	static std::string	delta_output_;
-	static std::string	go_delta_;
-	static std::string	delta_input_;
-	static bool	no_delta_reduction_;
+	static std::string	partial_expand_;  
 	static bool	math64_;
 	static bool	inline_function_;
 	static bool	math_notmp_;
@@ -589,8 +486,7 @@ private:
 	static int  int_size_;
 	static int  pointer_size_;
 	static bool take_union_field_addr_;
-	static bool vol_struct_union_fields_;
-	static Reducer* reducer_; 
+	static bool vol_struct_union_fields_; 
 
 	// flag to indicate language
 	static bool lang_cpp_;

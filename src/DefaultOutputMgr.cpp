@@ -40,9 +40,7 @@
 #include "CGContext.h"
 #include "VariableSelector.h"
 #include "Type.h"
-#include "random.h"
-#include "DeltaMonitor.h"
-#include "Error.h"
+#include "random.h"  
 
 static std::string filename_prefix = "rnd_output";
 
@@ -78,52 +76,15 @@ DefaultOutputMgr::CreateInstance()
 	return DefaultOutputMgr::instance_;
 }
 
-ofstream *
-DefaultOutputMgr::open_one_output_file(int num)
-{
-	std::ostringstream ss;
-	ss << CGOptions::split_files_dir() << dir_sep << filename_prefix << num << ".c";
-	ofstream *ofile = new ofstream(ss.str().c_str());
-	return ofile;
-}
-
 void
 DefaultOutputMgr::init()
 {
-	int max_files = CGOptions::max_split_files();
-
-	if (max_files == 0)
-		return;
-
-	for (int i = 0; i < max_files; ++i) {
-		ofstream *out = open_one_output_file(i);
-		outs.push_back(out);
-	}
 }
 
 bool
 DefaultOutputMgr::create_output_dir(std::string dir)
 {
 	return create_dir(dir.c_str());
-}
-
-void
-DefaultOutputMgr::OutputGlobals()
-{
-	std::ostringstream ss;
-	ss << CGOptions::split_files_dir() << dir_sep << global_header << ".h";
-
-	ofstream ofile(ss.str().c_str());
-	ofile << "#ifndef RND_GLOBALS_H" << std::endl;
-	ofile << "#define RND_GLOBALS_H" << std::endl;
-	ofile << "#include \"safe_math.h\"" << std::endl;
-
-	string prefix = "extern ";
-	OutputGlobalVariablesDecls(ofile, prefix);
-
-	OutputStructUnionDeclarations(ofile);
-	ofile << "#endif" << std::endl;
-	ofile.close();
 }
 
 void
@@ -196,21 +157,12 @@ DefaultOutputMgr::OutputHeader(int argc, char *argv[], unsigned long seed)
 void
 DefaultOutputMgr::Output()
 {
-	std::ostream &out = get_main_out();
-	if (DeltaMonitor::is_running() && (Error::get_error() != SUCCESS)) {
-		out << "Delta reduction error!\n";
-	}
-	if (is_split()) {
-		OutputGlobals();
-		OutputAllHeaders();
-		RandomOutputDefs();
-	}
-	else {
-		OutputStructUnionDeclarations(out);
-		OutputGlobalVariables(out);
-		OutputForwardDeclarations(out);
-		OutputFunctions(out);
-	}
+	std::ostream &out = get_main_out(); 
+	OutputStructUnionDeclarations(out);
+	OutputGlobalVariables(out);
+	OutputForwardDeclarations(out);
+	OutputFunctions(out);
+	 
 	if (CGOptions::step_hash_by_stmt()) {
 		OutputMgr::OutputHashFuncDef(out);
 		OutputMgr::OutputStepHashFuncDef(out);
@@ -218,27 +170,18 @@ DefaultOutputMgr::Output()
 		
 	if (!CGOptions::nomain())
 		OutputMain(out);
-	OutputTail(out);
-	DeltaMonitor::Output(out);
+	OutputTail(out); 
 }
 
 std::ostream &
 DefaultOutputMgr::get_main_out()
 {
-	if (is_split()) 
-		return *(outs[0]);
-	else if (ofile_) {
+	if (ofile_) {
 		return *ofile_;
 	}
 	else {
 		return std::cout;
 	}
-}
-
-bool
-DefaultOutputMgr::is_split()
-{
-	return (CGOptions::max_split_files() > 0);
 }
 
 void

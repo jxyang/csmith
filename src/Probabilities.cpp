@@ -40,8 +40,7 @@
 #include "FunctionInvocation.h"
 #include "Type.h"
 #include "SafeOpFlags.h"
-#include "CGOptions.h"
-#include "MspFilters.h"
+#include "CGOptions.h" 
 #include "VectorFilter.h"
 #include "random.h"
 
@@ -68,8 +67,6 @@ ProbabilityFilter::filter(int v) const
 	assert(v >= 0);
 	Probabilities *prob = Probabilities::GetInstance();
 	assert(prob);
-	if (prob->check_extra_filter(pname_, v))
-		return true;
 
 	GroupProbElem *elem = dynamic_cast<GroupProbElem*>(prob->probabilities_[pname_]);
 	assert(elem);
@@ -672,16 +669,9 @@ Probabilities::set_default_simple_types_prob()
 	}
 
 	SET_SINGLE_NAME("int_prob", Int, 1);
-	SET_SINGLE_NAME("short_prob", Short, 1);
-
-	if (CGOptions::ccomp()) {
-		SET_SINGLE_NAME("long_prob", Long, 0);
-		SET_SINGLE_NAME("ulong_prob", ULong, 0);
-	}
-	else {
-		SET_SINGLE_NAME("long_prob", Long, 1);
-		SET_SINGLE_NAME("ulong_prob", ULong, 1);
-	}
+	SET_SINGLE_NAME("short_prob", Short, 1); 
+	SET_SINGLE_NAME("long_prob", Long, 1);
+	SET_SINGLE_NAME("ulong_prob", ULong, 1); 
 
 	if (CGOptions::uint8()) {
 		SET_SINGLE_NAME("uchar_prob", UChar, 1);
@@ -817,8 +807,7 @@ Probabilities::get_prob_filter(ProbName pname)
 void
 Probabilities::set_prob_filter(ProbName pname)
 {
-	prob_filters_[pname] = new ProbabilityFilter(pname);
-	set_extra_filters(pname);
+	prob_filters_[pname] = new ProbabilityFilter(pname); 
 }
 
 void
@@ -838,32 +827,7 @@ Probabilities::unregister_extra_filter(ProbName pname, Filter *filter)
 	assert(impl);
 	assert(impl->extra_filters_[pname] == filter);
 	impl->extra_filters_[pname] = NULL;
-}
-
-void
-Probabilities::set_extra_filters(ProbName pname)
-{
-	if (CGOptions::msp()) {
-		switch(pname) {
-		case pBinaryOpsProb:
-			extra_filters_[pname] = new MspBinaryFilter();
-			break;
-		default:
-			break;
-		}
-	}
-}
-
-bool
-Probabilities::check_extra_filter(ProbName pname, int v)
-{
-	assert(v >= 0);
-	std::map<ProbName, Filter*>::iterator i = extra_filters_.find(pname);	
-	if (i != extra_filters_.end())
-		return (*i).second->filter(v);
-	else
-		return false;
-}
+} 
 
 // set up default probabilities
 void

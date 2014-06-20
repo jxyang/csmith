@@ -61,15 +61,9 @@ private:
 
 	DefaultOutputMgr();
 
-	virtual std::ostream &get_main_out();
+	virtual std::ostream &get_main_out(); 
 
-	bool is_split();
-
-	std::ofstream* open_one_output_file(int num);
-
-	void init();
-
-	void OutputGlobals();
+	void init(); 
 
 	void OutputAllHeaders();
 

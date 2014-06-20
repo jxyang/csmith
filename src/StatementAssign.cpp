@@ -46,9 +46,8 @@
 #include "Lhs.h"
 #include "Bookkeeper.h"
 #include "SafeOpFlags.h"
-#include "Error.h"
-#include "ProbabilityTable.h"
-#include "DepthSpec.h"
+
+#include "ProbabilityTable.h" 
 #include "CompatibleChecker.h"
 #include "Constant.h"
 #include "VectorFilter.h"
@@ -138,7 +137,7 @@ StatementAssign::make_random(CGContext &cg_context, const Type* type, const CVQu
 			return NULL;
 
 		e = Expression::make_random(rhs_cg_context, type, qf);
-		ERROR_GUARD_AND_DEL1(NULL, e);
+		
 		if (!qf) {
 			qfer = e->get_qualifiers();
 			// lhs should not has "const" qualifier
@@ -159,7 +158,7 @@ StatementAssign::make_random(CGContext &cg_context, const Type* type, const CVQu
 	}
 	else {
 		e = Expression::make_random(rhs_cg_context, type, qf);
-		ERROR_GUARD_AND_DEL1(NULL, e);
+		
 		if (!qf) {
 			qfer = e->get_qualifiers();
 			// lhs should not has "const" qualifier
@@ -184,25 +183,21 @@ StatementAssign::make_random(CGContext &cg_context, const Type* type, const CVQu
 	if (qf) CGOptions::match_exact_qualifiers(true);      // force exact qualifier match when selecting vars
 	lhs = Lhs::make_random(lhs_cg_context, type, &qfer, op != eSimpleAssign, need_no_rhs(op));
 	if (qf) CGOptions::match_exact_qualifiers(prev_flag); // restore flag
-	ERROR_GUARD_AND_DEL2(NULL, e, lhs);
+	
 
 	// typecast, if needed.
-	e->check_and_set_cast(type);
-	if (CGOptions::ccomp() && lhs->get_var()->isBitfield_) {
-		e->cast_type = type;
-	}
+	e->check_and_set_cast(type); 
 
-	if (CompatibleChecker::compatible_check(e, lhs)) {
-		Error::set_error(COMPATIBLE_CHECK_ERROR);
+	if (CompatibleChecker::compatible_check(e, lhs)) { 
 		delete e;
 		delete lhs;
 		return NULL;
 	}
 
 	cg_context.merge_param_context(lhs_cg_context, true); 
-	ERROR_GUARD_AND_DEL2(NULL, e, lhs);
+	
 	StatementAssign *stmt_assign = make_possible_compound_assign(cg_context, *lhs, op, *e);
-	ERROR_GUARD_AND_DEL2(NULL, e, lhs);
+	
 	return stmt_assign;
 }
 
@@ -241,7 +236,7 @@ StatementAssign::make_possible_compound_assign(CGContext &cg_context,
 		}
 		else {
 			local_fs = SafeOpFlags::make_random(sOpAssign);
-			ERROR_GUARD(NULL);
+			
 			fi = FunctionInvocationBinary::CreateFunctionInvocationBinary(cg_context, bop, local_fs);
 			tmp1 = dynamic_cast<FunctionInvocationBinary*>(fi)->get_tmp_var1();
 			tmp2 = dynamic_cast<FunctionInvocationBinary*>(fi)->get_tmp_var2();			
@@ -276,7 +271,7 @@ StatementAssign::make_possible_compound_assign(CGContext &cg_context,
 
 			tmp1 = blk->create_new_tmp_var(type1);
 			tmp2 = blk->create_new_tmp_var(type2);
-			ERROR_GUARD(NULL);
+			
 		}
 	}
 	StatementAssign *sa = new StatementAssign(cg_context.get_current_block(), l, op, e, rhs, fs, tmp1, tmp2);
@@ -503,18 +498,10 @@ StatementAssign::OutputAsExpr(std::ostream &out) const
 		{
 			eBinaryOps bop = compound_to_binary_ops(op);
 			lhs.Output(out);
+			out << " "; 
+			output_op(out);
 			out << " ";
-			if (CGOptions::ccomp() && (bop != MAX_BINARY_OP) && (lhs.is_volatile())) {
-				out << "=" << " ";
-				lhs.Output(out);
-				out << " " << FunctionInvocationBinary::get_binop_string(bop) << " ";
-				expr.Output(out);
-			}
-			else {
-				output_op(out);
-				out << " ";
-				expr.Output(out);
-			}
+			expr.Output(out); 
 			break;
 		}
 		

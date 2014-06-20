@@ -35,9 +35,8 @@
 #include "CGContext.h"
 #include "CGOptions.h"
 #include "random.h"
-#include "Error.h"
-#include "Probabilities.h"
-#include "DepthSpec.h"
+
+#include "Probabilities.h" 
 #include "Enumerator.h"
 
 //////////////////////////////////////////////////////////////////////
@@ -223,18 +222,15 @@ CVQualifiers::random_qualifiers(bool no_volatile, Effect::Access access, const C
 		}
 	}
 	else {
-		volatiles = !accept_stricter ? random_looser_volatiles() : random_stricter_volatiles();
-		ERROR_GUARD(CVQualifiers(consts, volatiles));
+		volatiles = !accept_stricter ? random_looser_volatiles() : random_stricter_volatiles(); 
 		if (!cg_context.get_effect_context().is_side_effect_free()) {
 			volatiles[volatiles.size() - 1] = false;
 		}
 	}
 
-	ERROR_GUARD(CVQualifiers(consts, volatiles));
 	make_scalar_volatiles(volatiles);
 	consts = !accept_stricter ? random_looser_consts() : random_stricter_consts();
-	make_scalar_consts(consts);
-	ERROR_GUARD(CVQualifiers(consts, volatiles));
+	make_scalar_consts(consts); 
 	if (access == Effect::WRITE) {
 		consts[consts.size() - 1] = false;
 	}
@@ -259,18 +255,15 @@ CVQualifiers::random_loose_qualifiers(bool no_volatile, Effect::Access access, c
 		}
 	}
 	else {
-		volatiles = random_looser_volatiles();
-		ERROR_GUARD(CVQualifiers(consts, volatiles));
+		volatiles = random_looser_volatiles(); 
 		if (!cg_context.get_effect_context().is_side_effect_free()) {
 			volatiles[volatiles.size() - 1] = false;
 		}
-	}
-	ERROR_GUARD(CVQualifiers(consts, volatiles));
+	} 
 	make_scalar_volatiles(volatiles);
 
 	consts = random_looser_consts();
-	make_scalar_consts(consts);
-	ERROR_GUARD(CVQualifiers(consts, volatiles));
+	make_scalar_consts(consts); 
 	if (access == Effect::WRITE) {
 		consts[consts.size() - 1] = false;
 	}
@@ -299,12 +292,9 @@ CVQualifiers::random_qualifiers(const Type* t, Effect::Access access, const CGCo
 
 	// set random volatile/const properties for each level of indirection for pointers
 	const Type* tmp = t->ptr_type;
-	while (tmp) {   
-		DEPTH_GUARD_BY_DEPTH_RETURN(2, ret_qfer);
-		isVolatile = rnd_flipcoin(volatile_prob);
-		ERROR_GUARD(ret_qfer);
-		isConst = rnd_flipcoin(const_prob); 
-		ERROR_GUARD(ret_qfer);
+	while (tmp) {    
+		isVolatile = rnd_flipcoin(volatile_prob); 
+		isConst = rnd_flipcoin(const_prob);  
 		if (isVolatile && isConst && !CGOptions::allow_const_volatile()) {
 			isConst = false;
 		}
@@ -319,22 +309,15 @@ CVQualifiers::random_qualifiers(const Type* t, Effect::Access access, const CGCo
 	isVolatile = false;
 	isConst = false;
 
-	if (volatile_ok && const_ok) {
-		DEPTH_GUARD_BY_DEPTH_RETURN(2, ret_qfer);
-		isVolatile = rnd_flipcoin(volatile_prob);
-		ERROR_GUARD(ret_qfer);
-		isConst = rnd_flipcoin(const_prob);
-		ERROR_GUARD(ret_qfer);  
+	if (volatile_ok && const_ok) { 
+		isVolatile = rnd_flipcoin(volatile_prob); 
+		isConst = rnd_flipcoin(const_prob); 
 	}
-	else if (volatile_ok) {
-		DEPTH_GUARD_BY_DEPTH_RETURN(1, ret_qfer);
-		isVolatile = rnd_flipcoin(volatile_prob);
-		ERROR_GUARD(ret_qfer);
+	else if (volatile_ok) { 
+		isVolatile = rnd_flipcoin(volatile_prob); 
 	}
-	else if (const_ok) {
-		DEPTH_GUARD_BY_DEPTH_RETURN(1, ret_qfer);
-		isConst = rnd_flipcoin(const_prob);
-		ERROR_GUARD(ret_qfer);
+	else if (const_ok) { 
+		isConst = rnd_flipcoin(const_prob); 
 	}
 
 	if (isVolatile && isConst && !CGOptions::allow_const_volatile()) {
@@ -391,10 +374,8 @@ CVQualifiers::random_stricter_consts(void) const
 		else if (is_volatiles[i] && !CGOptions::allow_const_volatile()) {
 			consts.push_back(false);
 		}
-		else {
-			DEPTH_GUARD_BY_DEPTH_RETURN(1, consts);
-			bool index = rnd_flipcoin(StricterConstProb);
-			ERROR_GUARD(consts);
+		else { 
+			bool index = rnd_flipcoin(StricterConstProb); 
 			consts.push_back(index);
 		}
 	}
@@ -417,10 +398,8 @@ CVQualifiers::random_stricter_volatiles(void) const
 		else if (is_consts[i] && !CGOptions::allow_const_volatile()) {
 			volatiles.push_back(false);
 		}
-		else {
-			DEPTH_GUARD_BY_DEPTH_RETURN(1, volatiles);
-			bool index = rnd_flipcoin(RegularVolatileProb);
-			ERROR_GUARD(volatiles);
+		else { 
+			bool index = rnd_flipcoin(RegularVolatileProb); 
 			volatiles.push_back(index);
 		}
 	}
@@ -440,10 +419,8 @@ CVQualifiers::random_looser_consts(void) const
 		if (!is_consts[i] || (depth - i > 2)) {
 			consts.push_back(is_consts[i]);
 		}
-		else {
-			DEPTH_GUARD_BY_DEPTH_RETURN(1, consts);
-			bool index = rnd_flipcoin(LooserConstProb);
-			ERROR_GUARD(consts);
+		else { 
+			bool index = rnd_flipcoin(LooserConstProb); 
 			consts.push_back(index);
 		}
 	}
@@ -461,10 +438,8 @@ CVQualifiers::random_looser_volatiles(void) const
 		if (!is_volatiles[i] || (i==0 && depth>1) || (depth - i > 2)) {
 			volatiles.push_back(is_volatiles[i]);
 		}
-		else {
-			DEPTH_GUARD_BY_DEPTH_RETURN(1, volatiles);
-			bool index = rnd_flipcoin(RegularVolatileProb);
-			ERROR_GUARD(volatiles);
+		else { 
+			bool index = rnd_flipcoin(RegularVolatileProb); 
 			volatiles.push_back(index);
 		}
 	}
@@ -489,28 +464,21 @@ CVQualifiers::random_add_qualifiers(bool no_volatile) const
 		qfer.add_qualifiers(false, false);
 		return qfer;
 	}
-	//bool is_const = rnd_upto(50);
-	if (no_volatile) {
-		DEPTH_GUARD_BY_DEPTH_RETURN(1, qfer);
-	}
-	else {
-		DEPTH_GUARD_BY_DEPTH_RETURN(2, qfer);
-	}
+	//bool is_const = rnd_upto(50); 
 
 	bool is_const;
 	if (!CGOptions::const_pointers())
 		is_const = false;
 	else
 		is_const = rnd_flipcoin(RegularConstProb);
-	ERROR_GUARD(qfer);
+
 	//bool is_volatile = no_volatile ? false : rnd_upto(RegularVolatileProb);  
 	bool is_volatile;
 	if (no_volatile || !CGOptions::volatile_pointers())
 		is_volatile = false;
 	else
 		is_volatile = rnd_flipcoin(RegularVolatileProb);
-
-	ERROR_GUARD(qfer);
+	 
 	qfer.add_qualifiers(is_const, is_volatile);
 	return qfer;
 }

@@ -43,10 +43,9 @@
 #include "FactMgr.h"
 #include "Lhs.h"
 #include "SafeOpFlags.h"
-#include "Error.h"
+
 #include "PartialExpander.h"
-#include "Bookkeeper.h"
-#include "DepthSpec.h"
+#include "Bookkeeper.h" 
 #include "StatementBreak.h"
 #include "StatementFor.h"
 #include "CFGEdge.h"
@@ -79,7 +78,7 @@ Statement*
 StatementArrayOp::make_random(CGContext &cg_context)
 { 
 	bool ary_init = rnd_flipcoin(5);
-	ERROR_GUARD(NULL);
+	
 	if (ary_init) { 
 		return make_random_array_init(cg_context);
 	}
@@ -94,12 +93,12 @@ StatementArrayOp::make_random_array_init(CGContext &cg_context)
 	//static int g = 0;
 	//int h = g++;
 	ArrayVariable* av =  VariableSelector::select_array(cg_context);
-	ERROR_GUARD(NULL);
+	
 	cg_context.get_effect_stm().clear();
 	// Select the loop control variable.
 	vector<const Variable*> invalid_vars; 
 	vector<const Variable*> cvs;
-	ERROR_GUARD(NULL);
+	
 	// the iteration settings are simple: start from index 0, step through all members
 	vector<int> inits, incrs;
 	size_t i;
@@ -117,8 +116,7 @@ StatementArrayOp::make_random_array_init(CGContext &cg_context)
 			cv = VariableSelector::SelectLoopCtrlVar(cg_context, invalid_vars); 
 			if (cv->is_volatile())
 				vol_count++;
-			if ((CGOptions::strict_volatile_rule() && (vol_count > 1) && cv->is_volatile())
-				|| (CGOptions::ccomp() && cv->is_packed_aggregate_field_var())
+			if ((CGOptions::strict_volatile_rule() && (vol_count > 1) && cv->is_volatile()) 
 				|| (!CGOptions::signed_char_index() && cv->type->is_signed_char())) {
 				invalid_vars.push_back(cv);
 				continue;
@@ -219,16 +217,9 @@ StatementArrayOp::output_header(std::ostream& out, int& indent) const
 		ctrl_vars[i]->Output(out);
 		(incrs[i] > 0) ? out << " < " << array_var->get_sizes()[i] : out << " >= 0";
 		out << "; ";
-		ctrl_vars[i]->Output(out);
-		if (CGOptions::ccomp()) {
-			// ccomp disable something like g += 1, where g is volatile
-			out << " = ";
-			ctrl_vars[i]->Output(out);
-			out << " + " << incrs[i] << ")";
-		}
-		else {
-			out << " += " << incrs[i] << ")";
-		}
+		ctrl_vars[i]->Output(out); 
+			
+		out << " += " << incrs[i] << ")"; 
 		outputln(out); 
 	} 
 }

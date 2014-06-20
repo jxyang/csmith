@@ -88,6 +88,7 @@ protected:
 
 	void OutputTail(std::ostream &out);
 
+	void OutputMainHeader(std::ostream &out);
 	void OutputMain(std::ostream &out);
 
 private:

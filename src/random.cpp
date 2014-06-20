@@ -42,16 +42,7 @@
 
 std::string get_prefixed_name(const std::string &name)
 {
-	if (!CGOptions::prefix_name())
-		return name;
-	if (!CGOptions::sequence_name_prefix()) {
-		AbsProgramGenerator* instance = AbsProgramGenerator::GetInstance();
-		assert(instance);
-		return instance->get_count_prefix(name);
-	}
-
-	RandomNumber *rnd = RandomNumber::GetInstance();
-	return rnd->get_prefixed_name(name);
+	return name;
 }
 
 std::string RandomHexDigits( int num )

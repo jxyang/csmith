@@ -52,7 +52,7 @@
 #include "ExpressionFuncall.h"
 #include "Bookkeeper.h"
 #include "Filter.h"
-#include "Error.h"
+
 #include "CVQualifiers.h"
 #include "VariableSelector.h"
 #include "SafeOpFlags.h"
@@ -132,7 +132,6 @@ ArrayVariable::CreateArrayVariable(const CGContext& cg_context, Block* blk, cons
 
 	// quick way to choose a random array dimension: 1d 60%, 2d 30%, and son on
 	int num = rnd_upto(99)+1;
-	ERROR_GUARD(NULL);
 	int dimension = 0;
 	int step = 100;
 	for (; num > 0; num -= step) {
@@ -146,8 +145,7 @@ ArrayVariable::CreateArrayVariable(const CGContext& cg_context, Block* blk, cons
 	vector<unsigned int> sizes;
 	int total_size = 1;
 	for (int i=0; i<dimension; i++) {
-		unsigned int dimen_size = rnd_upto(CGOptions::max_array_length_per_dimension()) + 1;
-		ERROR_GUARD(NULL);
+		unsigned int dimen_size = rnd_upto(CGOptions::max_array_length_per_dimension()) + 1; 
 		if (total_size * dimen_size > (unsigned int)CGOptions::max_array_length()) {
 			dimen_size = CGOptions::max_array_length() / total_size;
 		}
@@ -156,8 +154,7 @@ ArrayVariable::CreateArrayVariable(const CGContext& cg_context, Block* blk, cons
 			sizes.push_back(dimen_size);
 		}
 	}
-	ArrayVariable *var = new ArrayVariable(blk, name, type, init, qfer, sizes, isFieldVarOf);
-	ERROR_GUARD_AND_DEL1(NULL, var);
+	ArrayVariable *var = new ArrayVariable(blk, name, type, init, qfer, sizes, isFieldVarOf); 
 	if (type->is_aggregate()) {
 		var->create_field_vars(type);
 	}
@@ -342,8 +339,7 @@ ArrayVariable*
 ArrayVariable::rnd_mutate(void)
 {
 	assert(0 && "invalid call to rnd_mutate");
-	bool use_existing = rnd_flipcoin(20);
-	ERROR_GUARD(NULL);
+	bool use_existing = rnd_flipcoin(20); 
 	size_t i;
 	if (use_existing) {
 		vector<Variable*> ok_vars;
@@ -352,8 +348,7 @@ ArrayVariable::rnd_mutate(void)
 				ok_vars.push_back(parent->local_vars[i]);
 			}
 		}
-		Variable* v = VariableSelector::choose_ok_var(ok_vars);
-		ERROR_GUARD(NULL);
+		Variable* v = VariableSelector::choose_ok_var(ok_vars); 
 		if (v) {
 			ArrayVariable* av = dynamic_cast<ArrayVariable*>(v);
 			return av;
@@ -363,8 +358,7 @@ ArrayVariable::rnd_mutate(void)
 	vector<bool> mutate_flags; 
 	bool no_mutate = true;
 	for (i=0; i<get_dimension(); i++) {
-		bool mutate = rnd_flipcoin(10);
-		ERROR_GUARD(0);
+		bool mutate = rnd_flipcoin(10); 
 		mutate_flags.push_back(mutate);
 		if (mutate) {
 			no_mutate = false;
@@ -383,8 +377,7 @@ ArrayVariable::rnd_mutate(void)
 			FunctionInvocation* fi = new FunctionInvocationBinary(eAdd, 0);
         	fi->add_operand(new ExpressionVariable(*(ev->get_var())));
 			int offset = rnd_upto(sizes[i]);
-			if (offset == 0) offset = 1;	// give offset 1 more chance
-			ERROR_GUARD(NULL);
+			if (offset == 0) offset = 1;	// give offset 1 more chance 
 			ostringstream oss;
 			oss << offset;
         	fi->add_operand(new Constant(get_int_type(), oss.str()));
@@ -447,9 +440,8 @@ bool
 ArrayVariable::no_loop_initializer(void) const
 {
 	// don't use loop initializer if we are outputing deputy annotations
-	if (CGOptions::deputy()) return true;
-	// don't use loop initializer if we are doing test case reduction
-	// if (CGOptions::get_reducer()) return true;
+	if (CGOptions::deputy()) return true; 
+
 	// can not use loop initializer if either array member are structs, or they are constants, or it has > 1 initial values
 	return type->eType==eStruct || type->eType==eUnion || is_const() || is_global() || (init_values.size() > 0);
 }

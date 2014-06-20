@@ -44,11 +44,10 @@
 #include "CGOptions.h"
 #include "random.h"
 #include "Filter.h"
-#include "Error.h"
+
 #include "util.h"
 #include "Bookkeeper.h"
-#include "Probabilities.h"
-#include "DepthSpec.h"
+#include "Probabilities.h" 
 #include "Enumerator.h"
 
 using namespace std;
@@ -522,8 +521,7 @@ Type::choose_random_struct_union_type(vector<Type *> &ok_types)
 	size_t sz = ok_types.size();
 	assert(sz > 0);
 
-	int index = rnd_upto(ok_types.size());
-	ERROR_GUARD(0);
+	int index = rnd_upto(ok_types.size()); 
 	assert(index >= 0);
 	Type *rv_type = ok_types[index];
 	if (!rv_type->used) {
@@ -537,7 +535,7 @@ const Type*
 Type::choose_random_pointer_type(void) 
 {
 	unsigned int index = rnd_upto(derived_types.size());
-	ERROR_GUARD(NULL);
+	
 	return derived_types[index];
 }
 
@@ -558,11 +556,8 @@ Type::choose_random_struct_from_type(const Type* type, bool no_volatile)
 	vector<Type *> ok_struct_types;
 	get_all_ok_struct_union_types(ok_struct_types, no_volatile, false, true, true);
 
-	if (ok_struct_types.size() > 0) {
-		DEPTH_GUARD_BY_DEPTH_RETURN(1, NULL);
-
-		t = Type::choose_random_struct_union_type(ok_struct_types);
-		ERROR_GUARD(NULL);
+	if (ok_struct_types.size() > 0) { 
+		t = Type::choose_random_struct_union_type(ok_struct_types); 
 	}
 	return t;
 }
@@ -570,15 +565,14 @@ Type::choose_random_struct_from_type(const Type* type, bool no_volatile)
 const Type* 
 Type::random_type_from_type(const Type* type, bool no_volatile, bool strict_simple_type)
 {
-	const Type* t = type;
-	DEPTH_GUARD_BY_TYPE_RETURN(dtRandomTypeFromType, NULL);
+	const Type* t = type; 
 	if (type == 0) {
 		t = no_volatile ? choose_random_nonvoid_nonvolatile() : choose_random_nonvoid(); 
-		ERROR_GUARD(NULL);
+		
 	}
 	if (type->eType == eSimple && !strict_simple_type) {
 		t = choose_random_simple();
-		ERROR_GUARD(NULL);
+		
 	} 
 	if (t->eType == eSimple) {
 		assert(t->simple_type != eVoid);
@@ -625,15 +619,15 @@ Type::make_one_bitfield(vector<const Type*> &random_fields, vector<CVQualifiers>
 {
 	int max_length = CGOptions::int_size() * 8;
 	bool sign = rnd_flipcoin(BitFieldsSignedProb);
-	ERROR_RETURN();
+	
 
 	const Type *type = sign ? &Type::get_simple_type(eInt) : &Type::get_simple_type(eUInt);
 	random_fields.push_back(type);
 	CVQualifiers qual = CVQualifiers::random_qualifiers(type, FieldConstProb, FieldVolatileProb);
-	ERROR_RETURN();
+	
 	qualifiers.push_back(qual);
 	int length = rnd_upto(max_length); 
-	ERROR_RETURN();
+	
 
 	bool no_zero_len = fields_length.empty() || (fields_length.back() == 0);
 	// force length to be non-zero is required
@@ -641,7 +635,7 @@ Type::make_one_bitfield(vector<const Type*> &random_fields, vector<CVQualifiers>
 		if (max_length <= 2) length = 1;
 		else length = rnd_upto(max_length - 1) + 1;
 	} 
-	ERROR_RETURN(); 
+	 
 	fields_length.push_back(length);
 }
 
@@ -669,11 +663,11 @@ Type::make_one_struct_field(vector<const Type*> &random_fields,
 {
 	ChooseRandomTypeFilter f(/*for_field_var*/true);
 	unsigned int i = rnd_upto(AllTypes.size(), &f);
-	ERROR_RETURN();
+	
 	const Type* type = AllTypes[i];
 	random_fields.push_back(type);
 	CVQualifiers qual = CVQualifiers::random_qualifiers(type, FieldConstProb, FieldVolatileProb);
-	ERROR_RETURN();
+	
 	qualifiers.push_back(qual);
 	fields_length.push_back(-1);
 }
@@ -681,7 +675,7 @@ Type::make_one_struct_field(vector<const Type*> &random_fields,
 void
 Type::make_one_union_field(vector<const Type*> &fields, vector<CVQualifiers> &qfers, vector<int> &lens)
 {
-	bool is_bitfield = CGOptions::bitfields() && !CGOptions::ccomp() && rnd_flipcoin(BitFieldInNormalStructProb);
+	bool is_bitfield = CGOptions::bitfields() && rnd_flipcoin(BitFieldInNormalStructProb);
 	if (is_bitfield) {
 		make_one_bitfield(fields, qfers, lens);
 	} 
@@ -728,7 +722,7 @@ Type::make_one_union_field(vector<const Type*> &fields, vector<CVQualifiers> &qf
 	
 		fields.push_back(type);
 		CVQualifiers qual = CVQualifiers::random_qualifiers(type, FieldConstProb, FieldVolatileProb);
-		ERROR_RETURN();
+		
 		qfers.push_back(qual);
 		lens.push_back(-1);
 	}
@@ -1020,14 +1014,6 @@ void
 Type::make_all_struct_union_types(void)
 {
 	int level = CGOptions::max_nested_struct_level();
-	if (CGOptions::dfs_exhaustive()) {
-		vector<const Type*> accum_types;
-		reset_accum_types(accum_types);
-		make_all_struct_types(level, accum_types);
-		assert(accum_types.size() >= AllTypes.size());
-		for (size_t i = AllTypes.size(); i < accum_types.size(); ++i)
-			AllTypes.push_back(const_cast<Type*>(accum_types[i]));
-	}
 }
 
 bool
@@ -1061,31 +1047,23 @@ Type::make_random_struct_type(void)
         field_cnt = max_cnt;
     else
         field_cnt = rnd_upto(max_cnt) + 1;
-    ERROR_GUARD(NULL);
+    
     vector<const Type*> random_fields;
     vector<CVQualifiers> qualifiers;
     vector<int> fields_length;
     bool is_bitfields = CGOptions::bitfields() && rnd_flipcoin(BitFieldsCreationProb);
-    ERROR_GUARD(NULL);
+    
 
     //if (CGOptions::bitfields())
     if (is_bitfields)
         make_full_bitfields_struct_fields(field_cnt, random_fields, qualifiers, fields_length);
     else
-        make_normal_struct_fields(field_cnt, random_fields, qualifiers, fields_length);
-
-    ERROR_GUARD(NULL);
+        make_normal_struct_fields(field_cnt, random_fields, qualifiers, fields_length); 
 
     // for now, no union type
     bool packed = false;
-    if (CGOptions::packed_struct()) {
-	if (CGOptions::ccomp() && (has_aggregate_field(random_fields) || has_longlong_field(random_fields))) {
-		// Nothing to do
-	}
-	else {
-            packed = rnd_flipcoin(50);
-            ERROR_GUARD(NULL);
-        }
+    if (CGOptions::packed_struct()) { 
+		packed = rnd_flipcoin(50); 
     }
 
     Type* new_type = new Type(random_fields, true, packed, qualifiers, fields_length);
@@ -1097,7 +1075,7 @@ Type::make_random_union_type(void)
 { 
     size_t max_cnt = CGOptions::max_union_fields(); 
     size_t field_cnt = rnd_upto(max_cnt) + 1;
-    ERROR_GUARD(NULL);
+    
 
     vector<const Type*> fields;
     vector<CVQualifiers> qfers;
@@ -1119,10 +1097,10 @@ Type::make_random_pointer_type(void)
     //Type* ptr_type = 0;
     // occasionally choose pointer to pointers
     if (rnd_flipcoin(20)) {
-		ERROR_GUARD(NULL);
+		
         if (derived_types.size() > 0) {
 			unsigned int rnd_num = rnd_upto(derived_types.size());
-			ERROR_GUARD(NULL);
+			
 			const Type* t = derived_types[rnd_num];
 			if (t->get_indirect_level() < CGOptions::max_indirect_level()) {
 				return find_pointer_type(t, true);
@@ -1132,12 +1110,12 @@ Type::make_random_pointer_type(void)
     
     // choose a pointer to basic/aggregate types 
 	const Type* t = choose_random();
-	ERROR_GUARD(NULL);
+	
 	// consolidate all integer pointer types into "int*", hopefully this increase
 	// chance of pointer assignments and dereferences
 	if (t->eType == eSimple) {
 		t = get_int_type();
-		ERROR_GUARD(NULL);
+		
 	}
 	return find_pointer_type(t, true);
 }
@@ -1158,15 +1136,6 @@ Type::GenerateSimpleTypes(void)
 void
 GenerateAllTypes(void)
 {
-	// In the exhaustive mode, we want to generate all type first. 
-	// We don't support struct for now
-	if (CGOptions::dfs_exhaustive()) {
-		Type::GenerateSimpleTypes();
-		if (CGOptions::use_struct() && CGOptions::expand_struct())
-			Type::make_all_struct_union_types();
-		return;
-	}
-
 	Type::GenerateSimpleTypes();
     if (CGOptions::use_struct()) {
         while (MoreTypesProbability()) { 
@@ -1188,7 +1157,7 @@ Type::choose_random()
 {
 	ChooseRandomTypeFilter f(/*for_field_var*/false);
 	rnd_upto(AllTypes.size(), &f);
-	ERROR_GUARD(NULL);
+	
 	Type *rv_type = f.get_type();
 	if (!rv_type->used) {
 		Bookkeeper::record_type_with_bitfields(rv_type);
@@ -1199,12 +1168,10 @@ Type::choose_random()
 
 const Type *
 Type::choose_random_nonvoid(void)
-{
-	DEPTH_GUARD_BY_DEPTH_RETURN(1, NULL);
+{ 
 	NonVoidTypeFilter f;
-	rnd_upto(AllTypes.size(), &f);
-
-	ERROR_GUARD(NULL);
+	rnd_upto(AllTypes.size(), &f); 
+	
 	Type *typ = f.get_type();
 	assert(typ);
 	return typ;
@@ -1213,11 +1180,10 @@ Type::choose_random_nonvoid(void)
 const Type *
 Type::choose_random_nonvoid_nonvolatile(void)
 {
-	DEPTH_GUARD_BY_DEPTH_RETURN(1, NULL);
 	NonVoidNonVolatileTypeFilter f;
 	rnd_upto(AllTypes.size(), &f);
 
-	ERROR_GUARD(NULL);
+	
 	Type *typ = f.get_type();
 	assert(typ);
 	return typ;
@@ -1226,10 +1192,9 @@ Type::choose_random_nonvoid_nonvolatile(void)
 // ---------------------------------------------------------------------
 const Type *
 Type::choose_random_simple(void)
-{
-    DEPTH_GUARD_BY_TYPE_RETURN(dtTypeChooseSimple, NULL);
+{ 
     eSimpleType ty = choose_random_nonvoid_simple();
-    ERROR_GUARD(NULL);
+    
     assert(ty != eVoid);
     return &get_simple_type(ty);
 }
@@ -1569,10 +1534,10 @@ Type::SelectLType(bool no_volatile, eAssignOps op)
 	// so choose pointer types iff we create simple assignment
 	// (see Statement::make_random)
 	if (op == eSimpleAssign && rnd_flipcoin(PointerAsLTypeProb)) {
-		ERROR_GUARD(NULL);
+		
 		type = Type::make_random_pointer_type(); 
 	}
-	ERROR_GUARD(NULL);
+	
 
 	// choose a struct type as LHS type
 	if (!type) {
@@ -1675,11 +1640,9 @@ void OutputStructUnion(Type* type, std::ostream &out)
             }
         } 
         // output myself
-        if (type->packed_) {
-            if (!CGOptions::ccomp()) {
-                out << "#pragma pack(push)";
-                really_outputln(out);
-            }
+        if (type->packed_) { 
+            out << "#pragma pack(push)";
+            really_outputln(out); 
             out << "#pragma pack(1)";
             really_outputln(out);
         }
@@ -1718,14 +1681,10 @@ void OutputStructUnion(Type* type, std::ostream &out)
         }
         out << "};";
 		really_outputln(out);
-        if (type->packed_) {
-		if (CGOptions::ccomp()) {
-			out << "#pragma pack()";
-		}
-		else {
-			out << "#pragma pack(pop)";
-		}
-		really_outputln(out);
+
+        if (type->packed_) { 
+			out << "#pragma pack(pop)"; 
+			really_outputln(out);
         }
         type->printed = true;
 		really_outputln(out);

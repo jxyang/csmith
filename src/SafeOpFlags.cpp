@@ -34,10 +34,8 @@
 
 #include "SafeOpFlags.h"
 #include "random.h"
-#include "Error.h"
-#include "Probabilities.h"
-#include "DepthSpec.h"
-#include "MspFilters.h"
+
+#include "Probabilities.h" 
 
 using namespace std;
 
@@ -115,17 +113,16 @@ SafeOpFlags::get_rhs_type(void)
 
 SafeOpFlags*
 SafeOpFlags::make_random(SafeOpKind op_kind, eBinaryOps op)
-{
-	DEPTH_GUARD_BY_TYPE_RETURN_WITH_FLAG(dtSafeOpFlags, op_kind, NULL);
+{ 
 	SafeOpFlags *flags = new SafeOpFlags();
 	assert("new SafeOpFlags fail!");
 
 	flags->op1_ = rnd_flipcoin(SafeOpsSignedProb);
-	ERROR_GUARD_AND_DEL1(NULL, flags);
+	
 
 	if (op_kind == sOpBinary) {
 		flags->op2_ = rnd_flipcoin(SafeOpsSignedProb);
-		ERROR_GUARD_AND_DEL1(NULL, flags);
+		
 	}
 	else {
 		flags->op2_ = flags->op1_;
@@ -133,17 +130,11 @@ SafeOpFlags::make_random(SafeOpKind op_kind, eBinaryOps op)
 
 	// ISSUE: in the old code, is_func is always true
 	// Probably need to be fixed later.
-	flags->is_func_ = true;
+	flags->is_func_ = true; 
 
-	MspSafeOpSizeFilter *filter = new MspSafeOpSizeFilter(op);
-	Probabilities::register_extra_filter(pSafeOpsSizeProb, filter);
+	flags->op_size_ = (SafeOpSize)rnd_upto(MAX_SAFE_OP_SIZE, SAFE_OPS_SIZE_PROB_FILTER); 
 
-	flags->op_size_ = (SafeOpSize)rnd_upto(MAX_SAFE_OP_SIZE, SAFE_OPS_SIZE_PROB_FILTER);
-	Probabilities::unregister_extra_filter(pSafeOpsSizeProb, filter);
-	ERROR_GUARD_AND_DEL2(NULL, flags, filter);
-
-	//Probabilities::unregister_extra_filter(pSafeOpsSizeProb, filter);
-	delete filter;
+	//Probabilities::unregister_extra_filter(pSafeOpsSizeProb, filter); 
 	return flags;
 }
 
