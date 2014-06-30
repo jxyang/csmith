@@ -27,57 +27,76 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef DEFAULT_OUTPUT_MGR_H
-#define DEFAULT_OUTPUT_MGR_H
+#include "ProgramGenerator.h"
+#include <cassert>
+#include <sstream>
+#include "RandomNumber.h"
+#include "AbsRndNumGenerator.h"
+#include "DefaultCOutputMgr.h" 
+#include "Finalization.h"
+#include "Function.h"
+#include "Type.h" 
+#include "CGOptions.h"
+#include "SafeOpFlags.h"
 
-#include <vector>
-#include <string>
-#include <ostream>
-#include <fstream>
-#include "OutputMgr.h"
+ProgramGenerator* current_generator_ = NULL;
 
-using namespace std;
+ProgramGenerator::ProgramGenerator(int argc, char *argv[], unsigned long seed)
+	: argc_(argc),
+	  argv_(argv),
+	  seed_(seed),
+	  output_mgr_(NULL)
+{
 
-class DefaultOutputMgr : public OutputMgr {
-public:
-	static DefaultOutputMgr *CreateInstance();
+}
 
-	virtual ~DefaultOutputMgr();
+/* Factory method */
+ProgramGenerator* ProgramGenerator::CreateInstance(int argc, char *argv[], unsigned long seed)
+{
+	if (current_generator_ == NULL)
+		current_generator_ = new ProgramGenerator(argc, argv, seed);
+	return current_generator_;
+}
 
-	static bool create_output_dir(std::string dir);
+ProgramGenerator::~ProgramGenerator()
+{
+	Finalization::doFinalization();
+	delete output_mgr_;
+}
 
-	virtual void OutputHeader(int argc, char *argv[], unsigned long seed);
+void
+ProgramGenerator::Init()
+{ 
+	RandomNumber::CreateInstance(rDefaultRndNumGenerator, seed_);
+	  
+	// TODO: build different output managers based on user input 
+	// (either in a descriptive language or as a template)
+	output_mgr_ = DefaultCOutputMgr::CreateInstance();
+	 
+	assert(output_mgr_);
+	output_mgr_->Init();
+} 
 
-	virtual void Output();
+void
+ProgramGenerator::GoGenerator()
+{
+	output_mgr_->OutputProgramHeader(argc_, argv_, seed_);
 
-	virtual void outputln(ostream &out);
+	GenerateAllTypes();
+	GenerateFunctions();
+ 
+	output_mgr_->OutputProgram(); 
+}
 
-	virtual void output_comment_line(ostream &out, const std::string &comment);
+ProgramGenerator*
+ProgramGenerator::CurrentGenerator()
+{
+	return current_generator_;
+}
 
-	virtual void output_tab(ostream &out, int indent);
+AbsOutputMgr*
+ProgramGenerator::CurrentOutputMgr()
+{
+	return CurrentGenerator()->GetOutputMgr();
+}
 
-private:
-	explicit DefaultOutputMgr(std::ofstream *ofile);
-
-	DefaultOutputMgr();
-
-	virtual std::ostream &get_main_out(); 
-
-	void init(); 
-
-	void OutputAllHeaders();
-
-	void RandomOutputDefs();
-
-	void RandomOutputVarDefs();
-
-	void RandomOutputFuncDefs();
-
-	static DefaultOutputMgr *instance_;
-
-	std::vector<std::ofstream* > outs;
-
-	std::ofstream *ofile_;
-};
-
-#endif // DEFAULT_OUTPUT_MGR_H

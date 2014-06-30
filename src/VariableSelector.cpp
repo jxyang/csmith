@@ -48,7 +48,7 @@
 #include "FactPointTo.h"
 #include "FactUnion.h"
 #include "random.h"
-#include "util.h"
+#include "AbsOutputMgr.h"
 #include "Lhs.h"
 #include "ExpressionVariable.h"
 #include "ExpressionFuncall.h"
@@ -149,7 +149,7 @@ RandomParamName(void)
  * generate a new variable and store into AllVars
  */
 Variable *
-VariableSelector::new_variable(const std::string &name, const Type *type, const Expression* init, const CVQualifiers* qfer)
+VariableSelector::new_variable(const std::string &name, const Type *type, const Expression* init, const TypeQualifiers* qfer)
 { 
 	Variable *var = Variable::CreateVariable(name, type, init, qfer);
 	
@@ -170,7 +170,7 @@ VariableSelector::expand_struct_union_vars(vector<Variable *>& vars, const Type*
 		// don't expand virtual variables
 		if (tmpvar->is_virtual()) continue;
         // don't break up a struct if it matches the given type
-		if (tmpvar->is_aggregate() && (tmpvar->type != type)) {
+		if (tmpvar->IsAggregate() && (tmpvar->type != type)) {
             vars.erase(vars.begin() + i);
             vars.insert(vars.end(), tmpvar->field_vars.begin(), tmpvar->field_vars.end());
             i--;
@@ -192,7 +192,7 @@ VariableSelector::expand_struct_union_vars(vector<const Variable *>& vars, const
 		// don't expand virtual variables
 		if (tmpvar->is_virtual()) continue;
         // don't break up a struct if it matches the given type
-		if (tmpvar->is_aggregate() && (tmpvar->type != type)) {
+		if (tmpvar->IsAggregate() && (tmpvar->type != type)) {
             vars.erase(vars.begin() + i);
             vars.insert(vars.end(), tmpvar->field_vars.begin(), tmpvar->field_vars.end());
             i--;
@@ -287,7 +287,7 @@ VariableSelector::is_eligible_var(const Variable* var, int deref_level, Effect::
 
 /* return true if a variable in the list is volatile */
 bool
-VariableSelector::has_eligible_volatile_var(const vector<Variable *>& vars, const Type* type, const CVQualifiers* qfer, Effect::Access access, const CGContext& cg_context)
+VariableSelector::has_eligible_volatile_var(const vector<Variable *>& vars, const Type* type, const TypeQualifiers* qfer, Effect::Access access, const CGContext& cg_context)
 { 
 	for (size_t i=0; i<vars.size(); i++) {
 		Variable* var = vars[i];
@@ -392,7 +392,7 @@ VariableSelector::choose_var(vector<Variable *> vars,
 		   Effect::Access access,
 		   const CGContext &cg_context,
 		   const Type* type,
-		   const CVQualifiers* qfer,
+		   const TypeQualifiers* qfer,
 		   eMatchType mt,
 		   const vector<const Variable*>& invalid_vars,
 		   bool no_bitfield,
@@ -401,7 +401,7 @@ VariableSelector::choose_var(vector<Variable *> vars,
 	vector<Variable *> ok_vars;
 	vector<Variable *>::iterator i;
 
-	if (!no_expand_struct_union && type && (type->eType == eSimple || type->is_aggregate()))
+	if (!no_expand_struct_union && type && (type->eType == eSimple || type->IsAggregate()))
 		expand_struct_union_vars(vars, type); 
 
 	bool found = has_dereferenceable_var(vars, type, cg_context);
@@ -484,7 +484,7 @@ VariableSelector::choose_var(vector<Variable *> vars,
 
 Variable *
 VariableSelector::create_and_initialize(Effect::Access access, const CGContext &cg_context, const Type* t, 
-					const CVQualifiers* qfer, Block *blk, std::string name)
+					const TypeQualifiers* qfer, Block *blk, std::string name)
 {
 	const Expression* init = NULL;
 	Variable* var = NULL;
@@ -513,11 +513,11 @@ static int tmp_count = 0;
  * any struct type --- To generate the specific struct typed variable
  */
 Variable *
-VariableSelector::GenerateNewGlobal(Effect::Access access, const CGContext &cg_context, const Type* t, const CVQualifiers* qfer)
+VariableSelector::GenerateNewGlobal(Effect::Access access, const CGContext &cg_context, const Type* t, const TypeQualifiers* qfer)
 {	
 	
-	CVQualifiers var_qfer = (!qfer || qfer->wildcard) 
-								? CVQualifiers::random_qualifiers(t, access, cg_context, false)
+	TypeQualifiers var_qfer = (!qfer || qfer->wildcard) 
+								? TypeQualifiers::random_qualifiers(t, access, cg_context, false)
 								: *qfer;
 	
 	string name = RandomGlobalName();
@@ -541,11 +541,11 @@ VariableSelector::GenerateNewGlobal(Effect::Access access, const CGContext &cg_c
 }
 
 Variable *
-VariableSelector::GenerateNewNonArrayGlobal(Effect::Access access, const CGContext &cg_context, const Type* t, const CVQualifiers* qfer)
+VariableSelector::GenerateNewNonArrayGlobal(Effect::Access access, const CGContext &cg_context, const Type* t, const TypeQualifiers* qfer)
 {	
 	
-	CVQualifiers var_qfer = (!qfer || qfer->wildcard) 
-								? CVQualifiers::random_qualifiers(t, access, cg_context, false)
+	TypeQualifiers var_qfer = (!qfer || qfer->wildcard) 
+								? TypeQualifiers::random_qualifiers(t, access, cg_context, false)
 								: *qfer;
 	
 	string name = RandomGlobalName();
@@ -570,7 +570,7 @@ VariableSelector::GenerateNewNonArrayGlobal(Effect::Access access, const CGConte
 
 Variable*
 VariableSelector::eager_create_global_struct(Effect::Access access, const CGContext &cg_context, 
-					const Type* type, const CVQualifiers* qfer,
+					const Type* type, const TypeQualifiers* qfer,
 					eMatchType mt, const vector<const Variable*>& invalid_vars)
 {
 	// We will choose a struct with all of its qualifiers.
@@ -585,7 +585,7 @@ VariableSelector::eager_create_global_struct(Effect::Access access, const CGCont
 	else if (level == 1) {
 		t = Type::choose_random_struct_from_type(t->ptr_type, false);
 		if (qfer) {
-			CVQualifiers qfer1 = qfer->indirect_qualifiers(level);
+			TypeQualifiers qfer1 = qfer->indirect_qualifiers(level);
 			GenerateNewGlobal(access, cg_context, t, &qfer1);
 		}
 		else {
@@ -601,7 +601,7 @@ VariableSelector::eager_create_global_struct(Effect::Access access, const CGCont
 
 Variable*
 VariableSelector::eager_create_local_struct(Block &block, Effect::Access access, const CGContext &cg_context, 
-					const Type* type, const CVQualifiers* qfer,
+					const Type* type, const TypeQualifiers* qfer,
 					eMatchType mt, const vector<const Variable*>& invalid_vars)
 {
 	// We will choose a struct with all of its qualifiers.
@@ -616,7 +616,7 @@ VariableSelector::eager_create_local_struct(Block &block, Effect::Access access,
 	else if (level == 1) {
 		t = Type::choose_random_struct_from_type(t->ptr_type, true);
 		if (qfer) {
-			CVQualifiers qfer1 = qfer->indirect_qualifiers(level);
+			TypeQualifiers qfer1 = qfer->indirect_qualifiers(level);
 			GenerateNewParentLocal(block, access, cg_context, t, &qfer1);
 		}
 		else {
@@ -637,7 +637,7 @@ VariableSelector::eager_create_local_struct(Block &block, Effect::Access access,
 // --------------------------------------------------------------
 // Select a random global variable.
 Variable *
-VariableSelector::SelectGlobal(Effect::Access access, const CGContext &cg_context, const Type* type, const CVQualifiers* qfer, eMatchType mt, const vector<const Variable*>& invalid_vars)
+VariableSelector::SelectGlobal(Effect::Access access, const CGContext &cg_context, const Type* type, const TypeQualifiers* qfer, eMatchType mt, const vector<const Variable*>& invalid_vars)
 {
 	Variable* var = choose_var(GlobalList, access, cg_context, type, qfer, mt, invalid_vars);
 	
@@ -799,10 +799,10 @@ VariableSelector::lower_block_for_vars(const vector<Block*>& blks, vector<const 
  *    might call this function again)
  *************************************************************************************/
 Expression* 
-VariableSelector::make_init_value(Effect::Access access, const CGContext &cg_context, const Type* t, const CVQualifiers* qf, Block* b)
+VariableSelector::make_init_value(Effect::Access access, const CGContext &cg_context, const Type* t, const TypeQualifiers* qf, Block* b)
 {
-	assert(qf && qf->sanity_check(t));
-	CVQualifiers qfer(*qf);
+	assert(qf && qf->SanityCheck(t));
+	TypeQualifiers qfer(*qf);
 	// the initialzer should always be less restricting than the variable to be initialized
 	qfer.accept_stricter = false;
 
@@ -832,7 +832,7 @@ VariableSelector::make_init_value(Effect::Access access, const CGContext &cg_con
 		bool no_volatile = false; //!cg_context.get_effect_context().is_side_effect_free();
 		if (CGOptions::strict_volatile_rule())
 			no_volatile = !cg_context.get_effect_context().is_side_effect_free();
-		CVQualifiers qfer_deref = qfer.random_loose_qualifiers(no_volatile, access, cg_context);
+		TypeQualifiers qfer_deref = qfer.random_loose_qualifiers(no_volatile, access, cg_context);
 		qfer_deref.remove_qualifiers(1);
 		qfer_deref.accept_stricter = false; 
 		bool use_local = (b != 0 && type->eType == ePointer && !qfer_deref.is_volatile());
@@ -865,12 +865,12 @@ VariableSelector::GenerateNewParentLocal(Block &block,
 					   Effect::Access access,
 					   const CGContext &cg_context,
                        const Type* t,
-					   const CVQualifiers* qfer)
+					   const TypeQualifiers* qfer)
 {
 	
 	assert(t);
 	// if this is for a struct/union with volatile field(s), create a global variable instead
-	if (t->is_aggregate() && t->is_volatile_struct_union()) {
+	if (t->IsAggregate() && t->is_volatile_struct_union()) {
 		return GenerateNewGlobal(access, cg_context, t, qfer);  
 	}
 	// if there are "goto" in block (and sub-blocks), find the jump source statement,
@@ -879,12 +879,12 @@ VariableSelector::GenerateNewParentLocal(Block &block,
 	Block* blk = expand_block_for_goto(&block, cg_context);
 
 	// make a local variable with initializer
-	CVQualifiers var_qfer = (!qfer || qfer->wildcard) 
-								? CVQualifiers::random_qualifiers(t, access, cg_context, true) 
+	TypeQualifiers var_qfer = (!qfer || qfer->wildcard) 
+								? TypeQualifiers::random_qualifiers(t, access, cg_context, true) 
 								: *qfer;
 	
 	var_qfer.restrict(access, cg_context); 
-	assert(var_qfer.sanity_check(t));
+	assert(var_qfer.SanityCheck(t));
 	string name = RandomLocalName();
 
 	Variable* var = create_and_initialize(access, cg_context, t, &var_qfer, blk, name);
@@ -899,7 +899,7 @@ VariableSelector::GenerateNewParentLocal(Block &block,
  * generate parameter for func_1
  */
 Variable *
-VariableSelector::GenerateParameterVariable(const Type *type, const CVQualifiers *qfer)
+VariableSelector::GenerateParameterVariable(const Type *type, const TypeQualifiers *qfer)
 {
 	return new_variable(RandomParamName(), type, 0, qfer);
 }
@@ -922,7 +922,7 @@ VariableSelector::GenerateParameterVariable(Function &curFunc)
 	if (t->eType == eSimple)
 		assert(t->simple_type != eVoid);
 
-	CVQualifiers qfer = CVQualifiers::random_qualifiers(t); 
+	TypeQualifiers qfer = TypeQualifiers::random_qualifiers(t); 
 	
 	Variable *param = new_variable(RandomParamName(), t, 0, &qfer);
 	
@@ -934,7 +934,7 @@ Variable *
 VariableSelector::SelectParentLocal(Effect::Access access,
 				  const CGContext &cg_context,
                   const Type* type,
-				  const CVQualifiers* qfer,
+				  const TypeQualifiers* qfer,
 				  eMatchType mt,
 				  const vector<const Variable*>& invalid_vars)
 { 
@@ -1024,7 +1024,7 @@ Variable *
 VariableSelector::SelectParentParam(Effect::Access access,
 				  const CGContext &cg_context,
 				  const Type* type,
-				  const CVQualifiers* qfer,
+				  const TypeQualifiers* qfer,
 				  eMatchType mt,
 				  const vector<const Variable*>& invalid_vars)
 {
@@ -1041,7 +1041,7 @@ Variable *
 VariableSelector::GenerateNewVariable(Effect::Access access,
 					const CGContext &cg_context,
                     const Type* type,
-					const CVQualifiers* qfer)
+					const TypeQualifiers* qfer)
 { 
 	Variable *var = 0;
 	Function &func = *cg_context.get_current_func();
@@ -1112,7 +1112,7 @@ Variable *
 VariableSelector::select(Effect::Access access,
 			   const CGContext &cg_context,
                const Type* type,
-			   const CVQualifiers* qfer, 
+			   const TypeQualifiers* qfer, 
 			   const vector<const Variable*>& invalid_vars,
 			   eMatchType mt, eVariableScope scope)
 {
@@ -1168,9 +1168,9 @@ VariableSelector::select(Effect::Access access,
 // --------------------------------------------------------------
 // specifically select a pointer to be dereferenced 
 Variable *
-VariableSelector::select_deref_pointer(Effect::Access access, const CGContext &cg_context, const Type* type, const CVQualifiers* qfer, const vector<const Variable*>& invalid_vars)
+VariableSelector::select_deref_pointer(Effect::Access access, const CGContext &cg_context, const Type* type, const TypeQualifiers* qfer, const vector<const Variable*>& invalid_vars)
 { 
-	assert(qfer && qfer->sanity_check(type));
+	assert(qfer && qfer->SanityCheck(type));
 	vector<Variable*> vars;
 	// add globals
 	vars.insert(vars.end(), GlobalNonvolatilesList.begin(), GlobalNonvolatilesList.end()); 
@@ -1190,8 +1190,8 @@ VariableSelector::select_deref_pointer(Effect::Access access, const CGContext &c
 		Type* ptr_type = Type::find_pointer_type(type, true);
 		
 		assert(ptr_type);
-		CVQualifiers ptr_qfer = (!qfer || qfer->wildcard) 
-								? CVQualifiers::random_qualifiers(ptr_type, access, cg_context, true) 
+		TypeQualifiers ptr_qfer = (!qfer || qfer->wildcard) 
+								? TypeQualifiers::random_qualifiers(ptr_type, access, cg_context, true) 
 			                    //: qfer->indirect_qualifiers(-1);
 								: qfer->random_add_qualifiers(!cg_context.get_effect_context().is_side_effect_free());
 		
@@ -1226,7 +1226,7 @@ VariableSelector::select_deref_pointer(Effect::Access access, const CGContext &c
  */
 ArrayVariable* 
 VariableSelector::create_array_and_itemize(Block* blk, string name, const CGContext& cg_context, 
-		const Type* t, const Expression* init, const CVQualifiers* qfer)
+		const Type* t, const Expression* init, const TypeQualifiers* qfer)
 {
 	ArrayVariable* av = ArrayVariable::CreateArrayVariable(cg_context, blk, name, t, init, qfer, NULL);
 	
@@ -1261,7 +1261,7 @@ VariableSelector::create_random_array(const CGContext& cg_context)
 		type = as_global ? Type::choose_random_nonvoid() : Type::choose_random_nonvoid_nonvolatile();
 		
 	} while (type->is_const_struct_union() || !cg_context.accept_type(type));
-	CVQualifiers qfer;
+	TypeQualifiers qfer;
 	qfer.add_qualifiers(false, false);
 
 	Expression* init = Constant::make_random(type);
@@ -1374,7 +1374,7 @@ VariableSelector::itemize_array(CGContext& cg_context, const ArrayVariable* av)
 }
 
 const Variable*
-VariableSelector::select_must_use_var(Effect::Access access, CGContext &cg_context, const Type* type, const CVQualifiers* qfer) 
+VariableSelector::select_must_use_var(Effect::Access access, CGContext &cg_context, const Type* type, const TypeQualifiers* qfer) 
 {
 	if (cg_context.rw_directive == NULL) return NULL;
 
@@ -1432,7 +1432,7 @@ VariableSelector::create_mutated_array_var(const ArrayVariable* av, const vector
 Variable *
 VariableSelector::make_dummy_static_variable(const string &name)
 {
-	CVQualifiers dummy;
+	TypeQualifiers dummy;
 	Variable *var = new Variable(name, 0, 0, &dummy);
 	return var;
 }
@@ -1457,50 +1457,13 @@ VariableSelector::find_var_by_name(string name)
 void
 VariableSelector::doFinalization(void)
 {
-	size_t i;
+	size_t i;  
+	const Variable* v1 = AllVars[9112];
 	for(i=0; i<AllVars.size(); i++) {
+		const Variable* v = AllVars[i];
 		delete AllVars[i];
 	}
 	AllVars.clear();
 	GlobalList.clear();
 	GlobalNonvolatilesList.clear();
-}
-
-// --------------------------------------------------------------
-void
-OutputGlobalVariables(std::ostream &out)
-{
-	output_comment_line(out, "--- GLOBAL VARIABLES ---");
-	vector<Variable *>& vars = *(VariableSelector::GetGlobalVariables());
-	bool access_once = CGOptions::access_once();
-
-	CGOptions::access_once(false);
-	OutputVariableList(vars, out);
-	CGOptions::access_once(access_once);
-}
-
-void
-OutputGlobalVariablesDecls(std::ostream &out, std::string prefix)
-{
-	output_comment_line(out, "--- GLOBAL VARIABLES ---");
-
-	bool access_once = CGOptions::access_once();
-	CGOptions::access_once(false);
-	OutputVariableDeclList(*VariableSelector::GetGlobalVariables(), out, prefix);
-	CGOptions::access_once(access_once);
-}
-
-void
-HashGlobalVariables(std::ostream &out)
-{
-	MapVariableList(*VariableSelector::GetGlobalVariables(), out, HashVariable);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+}   

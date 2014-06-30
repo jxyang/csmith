@@ -61,9 +61,7 @@ public:
 	virtual bool must_jump(void) const;
 	virtual void get_exprs(std::vector<const Expression*>& exps) const {exps.push_back(&test);}
 	virtual void get_blocks(std::vector<const Block*>& /* blks */) const {};
-	virtual bool visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const;
-	virtual void Output(std::ostream &out, FactMgr* fm, int indent = 0) const;
-	void output_skipped_var_inits(std::ostream &out, int indent) const;
+	virtual bool visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const; 
 
 	static void doFinalization(void);
 

@@ -29,16 +29,12 @@
 
 // util.cpp --- various utility functions
 
-#include "util.h"
-
+#include "Util.h" 
 #include <string>
 #include <iostream>
 #include <sstream>
 #include <cassert>
-#include <vector>
-#include "OutputMgr.h"
-#include "AbsProgramGenerator.h"
-#include "CGOptions.h"
+#include <vector>  
 
 using namespace std; 
 ///////////////////////////////////////////////////////////////////////////////
@@ -138,69 +134,4 @@ int expand_within_ranges(vector<unsigned int> in, vector<intvec>& out)
 		out.push_back(tmp);
 	} 
 	return out.size();
-}
-
-void really_outputln(std::ostream &out)
-{
-	OutputMgr::really_outputln(out);
-}
-
-void outputln(std::ostream &out)
-{
-	OutputMgr *output = AbsProgramGenerator::GetOutputMgr();
-	assert(output);
-	output->outputln(out);
-}
-
-void output_print_str(std::ostream& out, std::string str, std::string str_value, int indent)
-{
-	output_tab(out, indent);
-	out << "printf(\"";
-	out << str;
-	out << "\"";
-	if (!str_value.empty()) {
-		out << ", ";
-		out << str_value;
-	}
-	out << ");";
-}
-
-void output_open_encloser(const char* symbol, std::ostream &out, int& indent)
-{
-	output_tab(out, indent);
-	out << symbol;
-	outputln(out);
-	indent++;
-}
-
-void output_close_encloser(const char* symbol, std::ostream &out, int& indent, bool no_newline)
-{
-	if (!no_newline) {
-		outputln(out);
-	}
-	indent--;
-	output_tab(out, indent);
-	out << symbol;
-}
-
-void output_comment_line(std::ostream &out, const std::string &comment)
-{
-	OutputMgr *output = AbsProgramGenerator::GetOutputMgr();
-	assert(output);
-	output->output_comment_line(out, comment);
-}
-
-void output_tab(std::ostream &out, int indent)
-{
-	OutputMgr *output = AbsProgramGenerator::GetOutputMgr();
-	assert(output);
-	output->output_tab(out, indent);
-}
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+} 

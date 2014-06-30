@@ -88,7 +88,7 @@ public:
 	virtual bool imply(const Fact& fact) const;
 	virtual bool point_to(const Variable* v) const;
 	virtual bool equal(const Fact& fact) const;
-	virtual void Output(std::ostream &out) const;
+	virtual std::string ToString(void) const;
 	virtual bool is_assertable(const Statement* s) const;
 
 	static std::vector<const Variable*> merge_pointees_of_pointer(const Variable* ptr, int indirect, const std::vector<const Fact*>& facts);

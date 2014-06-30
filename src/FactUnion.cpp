@@ -295,18 +295,10 @@ FactUnion::is_field_readable(const Variable* v, int fid, const vector<const Fact
 	return (fu && tmp.imply(*fu)) ;
 }
 
-void 
-FactUnion::Output(std::ostream &out) const
+std::string 
+FactUnion::ToString() const
 { 
-	var->Output(out);
-	out << " last written field: " << last_written_fid;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+	std::ostringstream ss;
+	ss << var->get_actual_name() << " last written field: " << last_written_fid;
+	return ss.str();
+} 

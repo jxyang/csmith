@@ -41,7 +41,7 @@
 #include "Fact.h" 
 #include "FactPointTo.h"
 #include "FactMgr.h"
-#include "CVQualifiers.h"
+#include "TypeQualifiers.h"
 #include "Statement.h"
 #include "Block.h"
 #include "CGOptions.h"
@@ -410,8 +410,7 @@ Bookkeeper::record_volatile_access(const Variable* var, int deref_level, bool wr
 				if (i) {
 					Bookkeeper::write_volatile_thru_ptr_cnt++;
 				}
-				Bookkeeper::write_volatile_cnt++;
-				//var->OutputDef(cout);
+				Bookkeeper::write_volatile_cnt++; 
 			}
 			else {
 				Bookkeeper::write_non_volatile_cnt++;
@@ -474,7 +473,7 @@ Bookkeeper::record_vars_with_bitfields(const Type *type)
 {
 	assert(type);
 	const Type *base_type = type->get_base_type();
-	if (!base_type->is_aggregate() ||
+	if (!base_type->IsAggregate() ||
 		(!base_type->has_bitfields()))
 		return;
 
@@ -487,7 +486,7 @@ Bookkeeper::record_vars_with_bitfields(const Type *type)
 void
 Bookkeeper::record_type_with_bitfields(const Type *typ)
 {
-	if (!typ->is_aggregate()) return;	
+	if (!typ->IsAggregate()) return;	
 
 	if (typ->has_bitfields()) {
 		Bookkeeper::structs_with_bitfields++;
@@ -501,7 +500,7 @@ Bookkeeper::record_type_with_bitfields(const Type *typ)
 			if (typ->bitfields_length_[i] == 0)
 				Bookkeeper::unamed_bitfields_in_total++;
 
-			CVQualifiers qual = typ->qfers_[i];
+			TypeQualifiers qual = typ->qfers_[i];
 			if (qual.is_const())
 				Bookkeeper::const_bitfields_in_total++;
 			if (qual.is_volatile())

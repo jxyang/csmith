@@ -43,7 +43,7 @@
 
 #include <ostream>
 #include "CGContext.h"
-#include "CVQualifiers.h"
+#include "TypeQualifiers.h"
 #include "ProbabilityTable.h"
 #include <vector>
 #include <string>
@@ -54,7 +54,7 @@ class Type;
 class FunctionInvocation;
 class FunctionInvocationUser;
 class ExpressionVariable;
-class CVQualifiers;
+class TypeQualifiers;
 
 #if 0
 /*
@@ -94,9 +94,9 @@ class Expression
 {
 public:
 	// Factory method.
-	static Expression *make_random(CGContext &cg_context, const Type* type, const CVQualifiers* qfer=0, bool no_func = false, bool no_const = false, enum eTermType tt=MAX_TERM_TYPES);
+	static Expression *make_random(CGContext &cg_context, const Type* type, const TypeQualifiers* qfer=0, bool no_func = false, bool no_const = false, enum eTermType tt=MAX_TERM_TYPES);
 
-	static Expression *make_random_param(CGContext &cg_context, const Type* type, const CVQualifiers* qfer, enum eTermType tt=MAX_TERM_TYPES);
+	static Expression *make_random_param(CGContext &cg_context, const Type* type, const TypeQualifiers* qfer, enum eTermType tt=MAX_TERM_TYPES);
 
 	static void InitProbabilityTables();
 
@@ -110,7 +110,7 @@ public:
 
 	virtual const Type &get_type(void) const = 0;
 
-	virtual CVQualifiers get_qualifiers(void) const = 0;
+	virtual TypeQualifiers get_qualifiers(void) const = 0;
 
 	virtual void get_eval_to_subexps(vector<const Expression*>& subs) const = 0;
 
@@ -131,18 +131,13 @@ public:
 	virtual bool equals(int /*num*/) const { return false;}
 	virtual bool is_0_or_1(void) const { return false;}
 
-	virtual bool use_var(const Variable* /* v */) const { return false;}
-
-	virtual void Output(std::ostream &) const = 0;
-	virtual void indented_output(std::ostream &out, int indent) const;
+	virtual bool use_var(const Variable* /* v */) const { return false;} 
 
 #if 0
 	void OutputBinaryOp(std::ostream &) const;
 #endif 
 
-	unsigned int func_count(void) const;
-	
-	std::string to_string(void) const;
+	unsigned int func_count(void) const; 
 
 	static void record_dereference_level(int level); 
 
@@ -150,8 +145,7 @@ public:
 
 	virtual bool compatible(const Variable *) const { return false;}
 
-	void check_and_set_cast(const Type* t);
-	void output_cast(std::ostream& out) const;
+	void check_and_set_cast(const Type* t); 
 
 	enum eTermType term_type;
 	int expr_id;

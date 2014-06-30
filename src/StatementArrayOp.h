@@ -63,12 +63,10 @@ public:
 				   const std::vector<int>& incrs, 
 				   const Expression *e);
 	virtual ~StatementArrayOp(void);
-    
-	void output_header(std::ostream& out, int& indent) const;
+     
 	virtual void get_exprs(std::vector<const Expression*>& exps) const { if (init_value) exps.push_back(init_value);}
 	virtual void get_blocks(std::vector<const Block*>& blks) const { if (body) blks.push_back(body);}
-	virtual bool visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const; 
-	virtual void Output(std::ostream &out, FactMgr* fm, int indent = 0) const;
+	virtual bool visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const;  
  
 	const ArrayVariable* array_var;
 	const std::vector<const Variable*> ctrl_vars;

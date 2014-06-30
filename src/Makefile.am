@@ -33,10 +33,6 @@ bin_PROGRAMS = csmith
 
 # XXX --- yuck!
 csmith_SOURCES = \
-	AbsExtension.cpp \
-	AbsExtension.h \
-	AbsProgramGenerator.cpp \
-	AbsProgramGenerator.h \
 	AbsRndNumGenerator.cpp \
 	AbsRndNumGenerator.h \
 	ArrayVariable.cpp \
@@ -51,39 +47,27 @@ csmith_SOURCES = \
 	CGContext.h \
 	CGOptions.cpp \
 	CGOptions.h \
-	CVQualifiers.cpp \
-	CVQualifiers.h \
+	TypeQualifiers.cpp \
+	TypeQualifiers.h \
 	Common.h \
 	CommonMacros.h \
 	CompatibleChecker.cpp \
 	CompatibleChecker.h \
 	Constant.cpp \
 	Constant.h \
-	CoverageTestExtension.cpp \
-	CoverageTestExtension.h \
-	CrestExtension.cpp \
-	CrestExtension.h \
-	DFSOutputMgr.cpp \
-	DFSOutputMgr.h \
-	DFSProgramGenerator.cpp \
-	DFSProgramGenerator.h \
-	DFSRndNumGenerator.cpp \
-	DFSRndNumGenerator.h \
-	DefaultOutputMgr.cpp \
-	DefaultOutputMgr.h \
-	DefaultProgramGenerator.cpp \
-	DefaultProgramGenerator.h \
+	AbsOutputMgr.cpp \
+	AbsOutputMgr.h \
+	CFamilyOutputMgr.cpp \
+	CFamilyOutputMgr.h \
+	DefaultCOutputMgr.cpp \
+	DefaultCOutputMgr.h \
+	ProgramGenerator.cpp \
+	ProgramGenerator.h \
 	DefaultRndNumGenerator.cpp \
 	DefaultRndNumGenerator.h \
-	DeltaMonitor.cpp \
-	DeltaMonitor.h \
-	DepthSpec.cpp \
-	DepthSpec.h \
 	Effect.cpp \
 	Effect.h \
 	Enumerator.h \
-	Error.cpp \
-	Error.h \
 	Expression.cpp \
 	Expression.h \
 	ExpressionAssign.cpp \
@@ -94,10 +78,6 @@ csmith_SOURCES = \
 	ExpressionFuncall.h \
 	ExpressionVariable.cpp \
 	ExpressionVariable.h \
-	ExtensionMgr.cpp \
-	ExtensionMgr.h \
-	ExtensionValue.cpp \
-	ExtensionValue.h \
 	Fact.cpp \
 	Fact.h \
 	FactMgr.cpp \
@@ -120,16 +100,10 @@ csmith_SOURCES = \
 	FunctionInvocationUnary.h \
 	FunctionInvocationUser.cpp \
 	FunctionInvocationUser.h \
-	KleeExtension.cpp \
-	KleeExtension.h \
 	Lhs.cpp \
 	Lhs.h \
 	LinearSequence.cpp \
 	LinearSequence.h \
-	MspFilters.cpp \
-	MspFilters.h \
-	OutputMgr.cpp \
-	OutputMgr.h \
 	PartialExpander.cpp \
 	PartialExpander.h \
 	Probabilities.cpp \
@@ -138,23 +112,12 @@ csmith_SOURCES = \
 	RandomNumber.cpp \
 	RandomNumber.h \
 	RandomProgramGenerator.cpp \
-	Reducer.cpp \
-	Reducer.h \
-	ReducerOutputMgr.cpp \
-	ReducerOutputMgr.h \
 	SafeOpFlags.cpp \
 	SafeOpFlags.h \
 	Sequence.cpp \
 	Sequence.h \
 	SequenceFactory.cpp \
 	SequenceFactory.h \
-	SequenceLineParser.h \
-	SimpleDeltaRndNumGenerator.cpp \
-	SimpleDeltaRndNumGenerator.h \
-	SimpleDeltaSequence.cpp \
-	SimpleDeltaSequence.h \
-	SplatExtension.cpp \
-	SplatExtension.h \
 	Statement.cpp \
 	Statement.h \
 	StatementArrayOp.cpp \
@@ -165,8 +128,8 @@ csmith_SOURCES = \
 	StatementBreak.h \
 	StatementContinue.cpp \
 	StatementContinue.h \
-	StatementExpr.cpp \
-	StatementExpr.h \
+	StatementCall.cpp \
+	StatementCall.h \
 	StatementFor.cpp \
 	StatementFor.h \
 	StatementGoto.cpp \
@@ -189,8 +152,8 @@ csmith_SOURCES = \
 	platform.h \
 	random.cpp \
 	random.h \
-	util.cpp \
-	util.h
+	Util.cpp \
+	Util.h
 
 # Include VC project files in the distribution.
 EXTRA_DIST = \

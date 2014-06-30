@@ -54,7 +54,6 @@ public:
 	virtual void get_blocks(std::vector<const Block*>& /* blks */) const {}; 
 	virtual void get_exprs(std::vector<const Expression*>& exps) const {exps.push_back(&test);}
 	virtual bool visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const;
-	virtual void Output(std::ostream &out, FactMgr* fm, int indent = 0) const;
 
 	const Expression &test;
 	const Block& loop_blk;

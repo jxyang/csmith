@@ -42,6 +42,7 @@
 #include "Expression.h"
 #include "FactMgr.h"
 #include "Bookkeeper.h"
+#include "AbsOutputMgr.h"
 
 
 using namespace std;
@@ -114,23 +115,7 @@ bool
 StatementContinue::must_jump(void) const 
 {
 	return test.not_equals(0);
-}
-
-/*
- *
- */
-void
-StatementContinue::Output(std::ostream &out, FactMgr* /*fm*/, int indent) const
-{
-	output_tab(out, indent);
-	out << "if (";
-	test.Output(out);
-	out << ")";
-	outputln(out);
-	output_tab(out, indent+1); 
-	out << "continue;"; 
-	outputln(out); 
-}
+} 
 
 bool 
 StatementContinue::visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const

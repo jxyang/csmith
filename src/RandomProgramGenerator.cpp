@@ -86,7 +86,7 @@ FUTURE:
 #include "Common.h"
 
 #include "CGOptions.h"
-#include "AbsProgramGenerator.h"
+#include "ProgramGenerator.h"
 
 #include "platform.h"
 #include "random.h"
@@ -249,10 +249,6 @@ static void print_advanced_help()
 
 	cout << "  --check-global: print the values of all integer global variables." << endl << endl;
 
-	cout << "  --monitor-funcs <name1,name2...>: dump the checksums after each statement in the monitored functions." << endl << endl;
-
-	cout << "  --step-hash-by-stmt: dump the checksum after each statement. It is applied to all functions unless --monitor-funcs is specified." << endl << endl;
-	
 	cout << "  --stop-by-stmt <num>: try to stop generating statements after the statement with id <num>." << endl << endl;
 	
 	cout << "  --const-as-condition: enable const to be conditions of if-statements. " << endl << endl;
@@ -790,12 +786,7 @@ main(int argc, char **argv)
 		if (strcmp (argv[i], "--check-global") == 0) {
 			CGOptions::blind_check_global(true);
 			continue;
-		}
-
-		if (strcmp (argv[i], "--step-hash-by-stmt") == 0) {
-			CGOptions::step_hash_by_stmt(true);
-			continue;
-		}
+		} 
 
 		if (strcmp (argv[i], "--stop-by-stmt") ==0 ) {
 			unsigned long num;
@@ -804,23 +795,6 @@ main(int argc, char **argv)
 			if (!parse_int_arg(argv[i], &num))
 				exit(-1);
 			CGOptions::stop_by_stmt(num);
-			continue;
-		}
-		
-		if (strcmp (argv[i], "--monitor-funcs") == 0) {
-			string vname;
-			i++;
-			arg_check(argc, i);
-			if (!parse_string_arg(argv[i], vname)) {
-				cout<< "please specify name(s) of the func(s) you want to monitor" << std::endl;
-				exit(-1);
-			}
-			CGOptions::monitored_funcs(vname);
-			continue;
-		}
-		
-		if (strcmp (argv[i], "--deputy") == 0) {
-			CGOptions::deputy(true);
 			continue;
 		}  
 
@@ -1161,14 +1135,15 @@ main(int argc, char **argv)
 		exit(-1);
 	}
 
-	AbsProgramGenerator *generator = AbsProgramGenerator::CreateInstance(argc, argv, g_Seed);
+	ProgramGenerator *generator = ProgramGenerator::CreateInstance(argc, argv, g_Seed);
 	if (!generator) {
 		cout << "error: can't create generator!" << std::endl;
 		exit(-1);
 	}
-	generator->goGenerator();
-	delete generator;
 
-//	file.close();
+	generator->Init();
+	generator->GoGenerator(); 
+	delete generator;
+	 
 	return 0;
 }

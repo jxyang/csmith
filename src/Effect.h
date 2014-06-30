@@ -88,7 +88,7 @@ public:
 		READ, WRITE
 	} Access;
 	
-	void Output(std::ostream &out) const;
+	std::string ToString() const;
 	bool has_global_effect(void) const;
 	void update_purity(void);
 	

@@ -129,10 +129,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\runtime\windows\_rand48.c" />
-    <ClCompile Include="AbsProgramGenerator.cpp">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
     <ClCompile Include="AbsRndNumGenerator.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -146,6 +142,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="CFamilyOutputMgr.cpp" />
     <ClCompile Include="CFGEdge.cpp" />
     <ClCompile Include="CGContext.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -163,15 +160,15 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="CVQualifiers.cpp">
+    <ClCompile Include="TypeQualifiers.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="DefaultOutputMgr.cpp">
+    <ClCompile Include="DefaultCOutputMgr.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="DefaultProgramGenerator.cpp">
+    <ClCompile Include="ProgramGenerator.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -247,7 +244,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\runtime\windows\lrand48.c" />
-    <ClCompile Include="OutputMgr.cpp">
+    <ClCompile Include="AbsOutputMgr.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -296,7 +293,7 @@
     </ClCompile>
     <ClCompile Include="StatementBreak.cpp" />
     <ClCompile Include="StatementContinue.cpp" />
-    <ClCompile Include="StatementExpr.cpp">
+    <ClCompile Include="StatementCall.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -336,11 +333,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AbsProgramGenerator.h" />
     <ClInclude Include="AbsRndNumGenerator.h" />
     <ClInclude Include="ArrayVariable.h" />
     <ClInclude Include="Block.h" />
     <ClInclude Include="Bookkeeper.h" />
+    <ClInclude Include="CFamilyOutputMgr.h" />
     <ClInclude Include="CFGEdge.h" />
     <ClInclude Include="CGContext.h" />
     <ClInclude Include="CGOptions.h" />
@@ -348,9 +345,9 @@
     <ClInclude Include="CommonMacros.h" />
     <ClInclude Include="CompatibleChecker.h" />
     <ClInclude Include="Constant.h" />
-    <ClInclude Include="CVQualifiers.h" />
-    <ClInclude Include="DefaultOutputMgr.h" />
-    <ClInclude Include="DefaultProgramGenerator.h" />
+    <ClInclude Include="TypeQualifiers.h" />
+    <ClInclude Include="DefaultCOutputMgr.h" />
+    <ClInclude Include="ProgramGenerator.h" />
     <ClInclude Include="DefaultRndNumGenerator.h" />
     <ClInclude Include="Effect.h" />
     <ClInclude Include="Expression.h" />
@@ -371,7 +368,7 @@
     <ClInclude Include="FunctionInvocationUser.h" />
     <ClInclude Include="Lhs.h" />
     <ClInclude Include="LinearSequence.h" />
-    <ClInclude Include="OutputMgr.h" />
+    <ClInclude Include="AbsOutputMgr.h" />
     <ClInclude Include="PartialExpander.h" />
     <ClInclude Include="platform.h" />
     <ClInclude Include="Probabilities.h" />
@@ -382,13 +379,12 @@
     <ClInclude Include="SafeOpFlags.h" />
     <ClInclude Include="Sequence.h" />
     <ClInclude Include="SequenceFactory.h" />
-    <ClInclude Include="SequenceLineParser.h" />
     <ClInclude Include="Statement.h" />
     <ClInclude Include="StatementArrayOp.h" />
     <ClInclude Include="StatementAssign.h" />
     <ClInclude Include="StatementBreak.h" />
     <ClInclude Include="StatementContinue.h" />
-    <ClInclude Include="StatementExpr.h" />
+    <ClInclude Include="StatementCall.h" />
     <ClInclude Include="StatementFor.h" />
     <ClInclude Include="StatementGoto.h" />
     <ClInclude Include="StatementIf.h" />

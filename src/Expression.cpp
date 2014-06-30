@@ -55,7 +55,8 @@
 #include "ProbabilityTable.h"
 #include "PartialExpander.h"
 #include "random.h"
-#include "CVQualifiers.h" 
+#include "TypeQualifiers.h" 
+#include "AbsOutputMgr.h"
 
 int eid = 0;
 
@@ -121,15 +122,7 @@ Expression::func_count(void) const
 	std::vector<const FunctionInvocationUser*> funcs;
 	get_called_funcs(funcs);
 	return funcs.size();
-}
-
-std::string
-Expression::to_string(void) const
-{
-	ostringstream oss;
-	Output(oss); 
-	return oss.str();
-}
+} 
 
 std::vector<const ExpressionVariable*> 
 Expression::get_dereferenced_ptrs(void) const
@@ -137,20 +130,13 @@ Expression::get_dereferenced_ptrs(void) const
 	// return a empty vector by default
 	std::vector<const ExpressionVariable*> empty;
 	return empty;
-}
-
-void 
-Expression::indented_output(std::ostream &out, int indent) const 
-{ 
-	output_tab(out, indent); 
-	Output(out);
-}
+} 
 
 /*
  *
  */
 Expression *
-Expression::make_random(CGContext &cg_context, const Type* type, const CVQualifiers* qfer, bool no_func, bool no_const, enum eTermType tt)
+Expression::make_random(CGContext &cg_context, const Type* type, const TypeQualifiers* qfer, bool no_func, bool no_const, enum eTermType tt)
 { 
 	Expression *e = 0;  
 	if (type == NULL) {
@@ -231,21 +217,11 @@ Expression::check_and_set_cast(const Type* type)
 	}
 }
 
-void
-Expression::output_cast(std::ostream& out) const
-{
-	if((CGOptions::lang_cpp()) && (cast_type != NULL)) {
-		out << "(";
-		cast_type->Output(out);
-		out << ") ";
-	}
-}
-
 /*
  *
  */
 Expression *
-Expression::make_random_param(CGContext &cg_context, const Type* type, const CVQualifiers* qfer, enum eTermType tt)
+Expression::make_random_param(CGContext &cg_context, const Type* type, const TypeQualifiers* qfer, enum eTermType tt)
 { 
 	Expression *e = 0;  
 	assert(type);

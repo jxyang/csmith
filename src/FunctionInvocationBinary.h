@@ -61,11 +61,7 @@ public:
 
 	virtual bool compatible(const Variable *) const { return false; }
 
-	virtual const Type &get_type(void) const;
-
-	virtual void Output(std::ostream &) const;
-
-	virtual void indented_output(std::ostream &out, int indent) const;
+	virtual const Type &get_type(void) const;  
 
 	virtual bool safe_invocation() const { return false; }
 
@@ -74,11 +70,9 @@ public:
 	eBinaryOps get_operation(void) const {return eFunc;}
 	void set_operation(eBinaryOps op) { eFunc = op;}
 
-	std::string get_tmp_var1() { return tmp_var1; }
+	std::string get_tmp_var1() const { return tmp_var1; } 
 
-	std::string get_tmp_var2() { return tmp_var2; }
-
-	static std::string get_binop_string(eBinaryOps bop);
+	std::string get_tmp_var2() const { return tmp_var2; } 
 
 	virtual bool equals(int num) const ;
 	virtual bool is_0_or_1(void) const;

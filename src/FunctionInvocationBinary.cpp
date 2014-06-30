@@ -31,7 +31,7 @@
 #include <cassert>
 
 #include "Common.h"
-
+#include "AbsOutputMgr.h"
 #include "CGOptions.h"
 #include "Expression.h" 
 #include "FactMgr.h"
@@ -41,10 +41,7 @@
 #include "Block.h"
 #include "random.h"
 
-using namespace std;
-
-static vector<bool> needcomma;  // Flag to track output of commas
-
+using namespace std; 
 ///////////////////////////////////////////////////////////////////////////////
 
 FunctionInvocationBinary *
@@ -245,205 +242,7 @@ FunctionInvocationBinary::get_type(void) const
 	}
 	assert(0);
 	return Type::get_simple_type(eInt);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-/*
- *
- */
-static void
-OutputStandardFuncName(eBinaryOps eFunc, std::ostream &out)
-{
-	switch (eFunc) {
-		// Math Ops
-	case eAdd:		out << "+";     break;
-	case eSub:		out << "-";     break;
-	case eMul:		out << "*";     break;
-	case eDiv:		out << "/";     break;
-	case eMod:		out << "%";     break;
-		
-		// Logical Ops
-	case eAnd:		out << "&&";	break;
-	case eOr:		out << "||";	break;
-	case eCmpEq:	out << "==";	break;
-	case eCmpNe:	out << "!=";	break;
-	case eCmpGt:	out << ">";		break;
-	case eCmpLt:	out << "<";		break;
-	case eCmpLe:	out << "<=";	break;
-	case eCmpGe:	out << ">=";	break;
-		
-		// Bitwise Ops
-	case eBitAnd:	out << "&";		break;
-	case eBitOr:	out << "|";		break;
-	case eBitXor:	out << "^";		break;
-	case eLShift:	out << "<<";    break;
-	case eRShift:	out << ">>";    break;
-	}
-}
-
-std::string
-FunctionInvocationBinary::get_binop_string(eBinaryOps bop)
-{
-	string op_string;
-	switch (bop)
-	{
-	case eAdd: op_string = "+"; break;
-	case eSub: op_string = "-"; break;
-	case eMul: op_string = "*"; break;
-	case eDiv: op_string = "/"; break;
-	case eMod: op_string = "%"; break;
-	case eBitAnd:	op_string = "&"; break;
-	case eBitXor:	op_string = "^"; break;
-	case eBitOr:  op_string = "|"; break;
-	default: assert(0); break;
-	}
-	return op_string;
-}
-
-/*
- *
- */
-void
-FunctionInvocationBinary::Output(std::ostream &out) const
-{
-	bool need_cast = false;
-	out << "(";
-	// special case for mutated array subscripts, see ArrayVariable::rnd_mutate
-	// the rational is we don't need overflow check for this addition because
-	// the induction variable is small --- less than the size of array, which
-	// has a small upper bound	
-	if (eFunc == eAdd && op_flags == 0) {
-		param_value[0]->Output(out);
-		out << " + ";
-		param_value[1]->Output(out);
-	}
-	else { 
-		switch (eFunc) {
-		case eAdd:
-		case eSub:
-		case eMul:
-		case eMod:
-		case eDiv:
-		case eLShift:
-		case eRShift:
-			if (CGOptions::avoid_signed_overflow()) {
-				string fname = op_flags->to_string(eFunc); 
-				int id = SafeOpFlags::to_id(fname);
-				// don't use safe math wrapper if this function is specified in "--safe-math-wrapper"
-				if (CGOptions::safe_math_wrapper(id)) {
-					out << fname << "(";  
-					if (CGOptions::math_notmp()) {
-						out << tmp_var1 << ", ";
-					}
-					param_value[0]->Output(out);
-					out << ", ";
-
-					if (CGOptions::math_notmp()) {
-						out << tmp_var2 << ", ";
-					}
-					param_value[1]->Output(out);
-					if (CGOptions::identify_wrappers()) {
-						out << ", " << id;
-					}
-					out << ")";				
-					break;
-				}
-			} 
-			need_cast = true;
-			// fallthrough!
-
-		default:
-			// explicit type casting for op1
-			if (need_cast) {
-				out << "("; 
-				op_flags->OutputSize(out);
-				out << ")";
-			}
-			param_value[0]->Output(out);
-			out << " ";
-			OutputStandardFuncName(eFunc, out);
-			out << " ";
-			// explicit type casting for op2
-			if (need_cast) {
-				out << "("; 
-				op_flags->OutputSize(out);
-				out << ")";
-			}
-			param_value[1]->Output(out);
-			break;
-		}
-	}
-	out << ")";
-}
-
-/*
- *
- */
-void
-FunctionInvocationBinary::indented_output(std::ostream &out, int indent) const
-{
-	if (has_simple_params()) {
-		output_tab(out, indent);
-		Output(out);
-		return;
-	}
-	output_open_encloser("(", out, indent);
-	// special case for mutated array subscripts, see ArrayVariable::rnd_mutate
-	// the rational is we don't need overflow check for this addition because
-	// the induction variable is small --- less than the size of array, which
-	// by default is 10 at most	
-	if (eFunc == eAdd && op_flags == 0) {
-		param_value[0]->indented_output(out, indent);
-		out << " + ";
-		outputln(out);
-		param_value[1]->indented_output(out, indent);
-	}
-	else { 
-		switch (eFunc) {
-		case eAdd:
-		case eSub:
-		case eMul:
-		case eMod:
-		case eDiv:
-		case eLShift:
-		case eRShift:
-			if (CGOptions::avoid_signed_overflow()) {
-				output_tab(out, indent);
-				out << op_flags->to_string(eFunc);
-				outputln(out);
-				output_open_encloser("(", out, indent); 
-				if (CGOptions::math_notmp()) {
-					output_tab(out, indent);
-					out << tmp_var1 << ", ";
-				}
-				outputln(out);
-				param_value[0]->indented_output(out, indent);
-				out << ", ";
-				outputln(out);
-				if (CGOptions::math_notmp()) {
-					output_tab(out, indent);
-					out << tmp_var2 << ", ";
-				}
-				outputln(out);
-				param_value[1]->indented_output(out, indent);
-				output_close_encloser(")", out, indent); 				
-				break;
-			} 
-			// fallthrough!
-
-		default:
-			param_value[0]->indented_output(out, indent);
-			out << " ";
-			OutputStandardFuncName(eFunc, out);
-			out << " "; 
-			outputln(out);
-			param_value[1]->indented_output(out, indent);
-			break;
-		}
-	}
-	output_close_encloser(")", out, indent); 
-}
+}   
 
 bool 
 FunctionInvocationBinary::visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const
@@ -467,12 +266,3 @@ FunctionInvocationBinary::visit_facts(vector<const Fact*>& inputs, CGContext& cg
 	// for other binary invocations, use the standard visitor
 	return FunctionInvocation::visit_facts(inputs, cg_context); 
 }  
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.

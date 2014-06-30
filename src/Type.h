@@ -46,7 +46,7 @@
 #include <vector>
 #include "CommonMacros.h"
 #include "StatementAssign.h"
-#include "CVQualifiers.h"
+#include "TypeQualifiers.h"
 
 template <class Name> class Enumerator;
 using namespace std;
@@ -142,26 +142,26 @@ public:
 				int type_bound, int qual_bound, int bitfield_qual_bound);
 
 	static bool make_one_normal_field_by_enum(Enumerator<string> &enumerator, vector<const Type*> &all_types,
-				vector<CVQualifiers> &all_quals, vector<const Type*> &fields,
-				vector<CVQualifiers> &quals, vector<int> &fields_length, int i);
+				vector<TypeQualifiers> &all_quals, vector<const Type*> &fields,
+				vector<TypeQualifiers> &quals, vector<int> &fields_length, int i);
 
 	static bool make_one_bitfield_by_enum(Enumerator<string> &enumerator,
-				vector<CVQualifiers> &all_bitfield_quals,
+				vector<TypeQualifiers> &all_bitfield_quals,
 				vector<const Type*> &random_fields,
-				vector<CVQualifiers> &qualifiers,
+				vector<TypeQualifiers> &qualifiers,
 				vector<int> &fields_length,
 				int index, bool &last_is_zero);
 
 	static int get_bitfield_length(int length_flag);
 
 	static void make_all_struct_types_(Enumerator<string> &bitfields_enumerator, vector<const Type*> &accum_types,
-				vector<const Type*> &all_types, vector<CVQualifiers> &all_quals, 
-				vector<CVQualifiers> &all_bitfield_quals);
+				vector<const Type*> &all_types, vector<TypeQualifiers> &all_quals, 
+				vector<TypeQualifiers> &all_bitfield_quals);
 
 	static void make_all_struct_types_with_bitfields(Enumerator<string> &enumerator, 
 					Enumerator<string> &bitfields_enumerator, 
 					vector<const Type*> &accum_types, vector<const Type*> &all_types,
-					vector<CVQualifiers> &all_quals, vector<CVQualifiers> &all_bitfield_quals);
+					vector<TypeQualifiers> &all_quals, vector<TypeQualifiers> &all_bitfield_quals);
 
 	static void make_all_struct_types(int level, vector<const Type*> &accum_types);
 
@@ -172,21 +172,21 @@ public:
 	static Type* make_random_union_type(void);
 
 	static void make_one_bitfield(vector<const Type*> &random_fields,
-				vector<CVQualifiers> &qualifiers,
+				vector<TypeQualifiers> &qualifiers,
 				vector<int> &fields_length);
 
 	static void make_one_struct_field(vector<const Type*> &random_fields, 
-					vector<CVQualifiers> &qualifiers, 
+					vector<TypeQualifiers> &qualifiers, 
 					vector<int> &fields_length);
 
-	static void make_one_union_field(vector<const Type*> &fields, vector<CVQualifiers> &qfers, vector<int> &lens);
+	static void make_one_union_field(vector<const Type*> &fields, vector<TypeQualifiers> &qfers, vector<int> &lens);
 
 	static void make_full_bitfields_struct_fields(size_t field_cnt, vector<const Type*> &random_fields, 
-					vector<CVQualifiers> &qualifiers,
+					vector<TypeQualifiers> &qualifiers,
 					vector<int> &fields_length);
 
 	static void make_normal_struct_fields(size_t field_cnt, vector<const Type*> &random_fields, 
-					vector<CVQualifiers> &qualifiers,
+					vector<TypeQualifiers> &qualifiers,
 					vector<int> &fields_length);
 
 	// make a random pointer type
@@ -195,9 +195,7 @@ public:
 	static const Type *get_type_from_string(const string &type_string);
 
 	// generate all simple types except void and long long(if it is not allowed)
-	static void GenerateSimpleTypes(void);
-
-	void get_type_sizeof_string(std::string &s) const;
+	static void GenerateSimpleTypes(void); 
 
 	// For choosing a random, non-void `eSimpleType'.
 	static eSimpleType choose_random_nonvoid_simple(void);
@@ -211,7 +209,7 @@ public:
 
 	explicit Type(eSimpleType simple_type);
 	Type(vector<const Type*>& fields, bool isStruct, bool packed, 
-			vector<CVQualifiers> &qfers, vector<int> &fields_length);
+			vector<TypeQualifiers> &qfers, vector<int> &fields_length);
 	Type(vector<unsigned int>& array_dims, eSimpleType st);
 	explicit Type(const Type* t);
 	~Type(void);
@@ -248,14 +246,15 @@ public:
 	bool is_const_struct_union() const;
 	bool is_volatile_struct_union() const;
 	bool is_int(void) const { return eType == eSimple && simple_type != eVoid;}
-	bool is_aggregate(void) const { return eType == eStruct || eType == eUnion;}
+	bool IsAggregate(void) const { return eType == eStruct || eType == eUnion;}
+	bool IsUserDefined(void) const { return IsAggregate();}
 	bool match(const Type* t, enum eMatchType mt) const;
-	unsigned long SizeInBytes(void) const;
-	void Output(std::ostream &) const;
+	unsigned long SizeInBytes(void) const; 
 	std::string printf_directive(void) const;
 	static Type* find_pointer_type(const Type* t, bool add);
 	static Type* find_type(const Type* t);
 
+	static const vector<Type *>& GetAllTypes(); 
 // private:	
 	eTypeDesc eType;
 	const Type *ptr_type;
@@ -267,7 +266,7 @@ public:
 	bool used;                          // whether any variable declared with this type
 	bool printed;                       // whether this struct/union has been printed in the random program
 	const bool packed_;					// whether this struct/union should be packed
-	vector<CVQualifiers> qfers_;		// conresponds to each element of fields 
+	vector<TypeQualifiers> qfers_;		// conresponds to each element of fields 
 					// It's a tradeoff between the current implementation and the
 					// need of struct's level type qualifiers. 
 	vector<int> bitfields_length_;		// -1 means it's a regular field

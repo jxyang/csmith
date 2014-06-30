@@ -47,7 +47,7 @@ class ExpressionVariable : public Expression
 {
 public:
 	// Factory method.
-	static ExpressionVariable *make_random(CGContext &cg_context, const Type* type, const CVQualifiers* qfer=0, bool as_param=false, bool as_return=false);
+	static ExpressionVariable *make_random(CGContext &cg_context, const Type* type, const TypeQualifiers* qfer=0, bool as_param=false, bool as_return=false);
 
 	explicit ExpressionVariable(const Variable &v);
 
@@ -57,7 +57,7 @@ public:
 
 	virtual Expression* clone() const;
 
-	virtual CVQualifiers get_qualifiers(void) const;
+	virtual TypeQualifiers get_qualifiers(void) const;
 
 	virtual void get_eval_to_subexps(vector<const Expression*>& subs) const {subs.push_back(this);}
 
@@ -78,9 +78,7 @@ public:
 
 	virtual bool compatible(const Variable *v) const;
 
-	virtual bool use_var(const Variable* v) const { return v == &var;}
-
-	virtual void Output(std::ostream &) const;
+	virtual bool use_var(const Variable* v) const { return v == &var;} 
 
 private:
 	explicit ExpressionVariable(const ExpressionVariable &expr);

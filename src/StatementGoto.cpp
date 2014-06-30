@@ -46,7 +46,7 @@
 #include "Type.h"
 #include "FactMgr.h"
 #include "random.h"
-
+#include "AbsOutputMgr.h" 
 #include "Bookkeeper.h"
 
 using namespace std;
@@ -243,41 +243,7 @@ StatementGoto::StatementGoto(const StatementGoto &sg)
 StatementGoto::~StatementGoto(void)
 {
 	delete &test;
-}
-
-/*
- *
- */
-void
-StatementGoto::Output(std::ostream &out, FactMgr* /*fm*/, int indent) const
-{
-	output_tab(out, indent);
-	out << "if (";
-	test.Output(out);
-	out << ")";
-	outputln(out);
-	output_tab(out, indent+1); 
-	out << "goto " << label << ";"; 
-	outputln(out); 
-}
-
-/*
- *
- */
-void
-StatementGoto::output_skipped_var_inits(std::ostream &out, int indent) const
-{
-	size_t i;
-	for (i=0; i<init_skipped_vars.size(); i++) {
-		output_tab(out, indent);
-		const Variable* v = init_skipped_vars[i];
-		out << v->get_actual_name() << " = ";
-		assert(v->init);
-		v->init->Output(out);
-		out << ";";
-		outputln(out); 
-	}
-}
+}  
 
 /*
  * find all the local variables whose initialization has been skipped due to this jump

@@ -29,7 +29,7 @@
 
 #include <assert.h>
 #include <iostream>
-#include "CVQualifiers.h"
+#include "TypeQualifiers.h"
 #include "Type.h"
 #include "Effect.h"
 #include "CGContext.h"
@@ -38,25 +38,25 @@
 
 #include "Probabilities.h" 
 #include "Enumerator.h"
-
+ 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
-CVQualifiers::CVQualifiers(void)
+TypeQualifiers::TypeQualifiers(void)
 : wildcard(false),
   accept_stricter(false)
 {
 	// nothing else to do
 }
 
-CVQualifiers::CVQualifiers(bool wild, bool accept_stricter)
+TypeQualifiers::TypeQualifiers(bool wild, bool accept_stricter)
 : wildcard(wild),
   accept_stricter(accept_stricter)
 {
 	// nothing else to do
 }
 
-CVQualifiers::CVQualifiers(const vector<bool>& isConsts, const vector<bool>& isVolatiles)
+TypeQualifiers::TypeQualifiers(const vector<bool>& isConsts, const vector<bool>& isVolatiles)
 : wildcard(false),
   accept_stricter(false),
   is_consts(isConsts),
@@ -65,7 +65,7 @@ CVQualifiers::CVQualifiers(const vector<bool>& isConsts, const vector<bool>& isV
 	// nothing else to do
 }
 
-CVQualifiers::CVQualifiers(const CVQualifiers &qfer)
+TypeQualifiers::TypeQualifiers(const TypeQualifiers &qfer)
 : wildcard(qfer.wildcard),
   accept_stricter(qfer.accept_stricter),
   is_consts(qfer.get_consts()),
@@ -74,12 +74,12 @@ CVQualifiers::CVQualifiers(const CVQualifiers &qfer)
 	// nothing else to do
 }
 
-CVQualifiers::~CVQualifiers()
+TypeQualifiers::~TypeQualifiers()
 {
 }
 
-CVQualifiers &
-CVQualifiers::operator=(const CVQualifiers &qfer)
+TypeQualifiers &
+TypeQualifiers::operator=(const TypeQualifiers &qfer)
 {	
 	if (this == &qfer) {
 		return *this;
@@ -104,7 +104,7 @@ CVQualifiers::operator=(const CVQualifiers &qfer)
   * http://www.embedded.com/columns/programmingpointers/180205632?_requestid=488055
   **************************************************************/
 bool 
-CVQualifiers::stricter_than(const CVQualifiers& qfer) const
+TypeQualifiers::stricter_than(const TypeQualifiers& qfer) const
 {
 	size_t i; 
 	assert(is_consts.size() == is_volatiles.size());
@@ -148,7 +148,7 @@ CVQualifiers::stricter_than(const CVQualifiers& qfer) const
 }
 
 bool 
-CVQualifiers::match(const CVQualifiers& qfer) const
+TypeQualifiers::match(const TypeQualifiers& qfer) const
 {
 	if (wildcard) {
 		return true;
@@ -165,7 +165,7 @@ CVQualifiers::match(const CVQualifiers& qfer) const
 }
 
 bool 
-CVQualifiers::match_indirect(const CVQualifiers& qfer) const
+TypeQualifiers::match_indirect(const TypeQualifiers& qfer) const
 {
 	if (wildcard) {
 		return true;
@@ -184,7 +184,7 @@ CVQualifiers::match_indirect(const CVQualifiers& qfer) const
  * make sure no volatile-pointers if volatile-pointers is false
  */
 void
-CVQualifiers::make_scalar_volatiles(std::vector<bool> &volatiles)
+TypeQualifiers::make_scalar_volatiles(std::vector<bool> &volatiles)
 {
 	if (!CGOptions::volatile_pointers()) {
 		for (size_t i=1; i<volatiles.size(); i++)
@@ -196,7 +196,7 @@ CVQualifiers::make_scalar_volatiles(std::vector<bool> &volatiles)
  * make sure no const-pointers if const_pointers is false
  */
 void
-CVQualifiers::make_scalar_consts(std::vector<bool> &consts)
+TypeQualifiers::make_scalar_consts(std::vector<bool> &consts)
 {
 	if (!CGOptions::const_pointers()) {
 		for (size_t i=1; i<consts.size(); i++)
@@ -207,13 +207,13 @@ CVQualifiers::make_scalar_consts(std::vector<bool> &consts)
 /* 
  * generate a random CV qualifier vector that is looser or stricter than this one
  */
-CVQualifiers 
-CVQualifiers::random_qualifiers(bool no_volatile, Effect::Access access, const CGContext &cg_context) const
+TypeQualifiers 
+TypeQualifiers::random_qualifiers(bool no_volatile, Effect::Access access, const CGContext &cg_context) const
 {
 	std::vector<bool> volatiles;
 	std::vector<bool> consts;
 	if (wildcard) {
-		return CVQualifiers(true, accept_stricter);
+		return TypeQualifiers(true, accept_stricter);
 	}
 	// use non-volatile for all levels if requested
 	if (no_volatile) {
@@ -234,19 +234,19 @@ CVQualifiers::random_qualifiers(bool no_volatile, Effect::Access access, const C
 	if (access == Effect::WRITE) {
 		consts[consts.size() - 1] = false;
 	}
-	return CVQualifiers(consts, volatiles);
+	return TypeQualifiers(consts, volatiles);
 }
 
 /* 
  * generate a random CV qualifier vector that is looser than this one
  */
-CVQualifiers 
-CVQualifiers::random_loose_qualifiers(bool no_volatile, Effect::Access access, const CGContext &cg_context) const
+TypeQualifiers 
+TypeQualifiers::random_loose_qualifiers(bool no_volatile, Effect::Access access, const CGContext &cg_context) const
 {
 	std::vector<bool> volatiles;
 	std::vector<bool> consts;
 	if (wildcard) {
-		return CVQualifiers(true, accept_stricter);
+		return TypeQualifiers(true, accept_stricter);
 	}
 	// use non-volatile for all levels if requested
 	if (no_volatile) {
@@ -267,21 +267,21 @@ CVQualifiers::random_loose_qualifiers(bool no_volatile, Effect::Access access, c
 	if (access == Effect::WRITE) {
 		consts[consts.size() - 1] = false;
 	}
-	return CVQualifiers(consts, volatiles);
+	return TypeQualifiers(consts, volatiles);
 }
 
-CVQualifiers
-CVQualifiers::random_qualifiers(const Type* t, Effect::Access access, 
+TypeQualifiers
+TypeQualifiers::random_qualifiers(const Type* t, Effect::Access access, 
 				const CGContext &cg_context, bool no_volatile)
 {
 	return random_qualifiers(t, access, cg_context, no_volatile, RegularConstProb, RegularVolatileProb);
 }
 
-CVQualifiers 
-CVQualifiers::random_qualifiers(const Type* t, Effect::Access access, const CGContext &cg_context, bool no_volatile, 
+TypeQualifiers 
+TypeQualifiers::random_qualifiers(const Type* t, Effect::Access access, const CGContext &cg_context, bool no_volatile, 
 					unsigned int const_prob, unsigned int volatile_prob)
 { 
-	CVQualifiers ret_qfer;
+	TypeQualifiers ret_qfer;
 	if (t==0) {
 		return ret_qfer;
 	}
@@ -333,15 +333,15 @@ CVQualifiers::random_qualifiers(const Type* t, Effect::Access access, const CGCo
 	}
 	make_scalar_volatiles(is_volatiles);
 	make_scalar_consts(is_consts);
-	return CVQualifiers(is_consts, is_volatiles);
+	return TypeQualifiers(is_consts, is_volatiles);
 }
 
 /* 
  * make a random qualifier for type t, assuming non context,
  * and no volatile allowed
  */
-CVQualifiers 
-CVQualifiers::random_qualifiers(const Type* t)
+TypeQualifiers 
+TypeQualifiers::random_qualifiers(const Type* t)
 { 
 	return random_qualifiers(t, Effect::READ, CGContext::get_empty_context(), true);
 }
@@ -350,14 +350,14 @@ CVQualifiers::random_qualifiers(const Type* t)
  * be careful to use it because it will generate volatile without knowing the context. 
  * Only used to generate qulifiers for struct/unions
  */
-CVQualifiers 
-CVQualifiers::random_qualifiers(const Type* t, unsigned int const_prob, unsigned int volatile_prob)
+TypeQualifiers 
+TypeQualifiers::random_qualifiers(const Type* t, unsigned int const_prob, unsigned int volatile_prob)
 { 
 	return random_qualifiers(t, Effect::READ, CGContext::get_empty_context(), false, const_prob, volatile_prob);
 }
 
 vector<bool> 
-CVQualifiers::random_stricter_consts(void) const
+TypeQualifiers::random_stricter_consts(void) const
 {
 	vector<bool> consts;
 	size_t i;
@@ -383,7 +383,7 @@ CVQualifiers::random_stricter_consts(void) const
 }
 
 vector<bool> 
-CVQualifiers::random_stricter_volatiles(void) const
+TypeQualifiers::random_stricter_volatiles(void) const
 {
 	vector<bool> volatiles;
 	size_t i;
@@ -408,7 +408,7 @@ CVQualifiers::random_stricter_volatiles(void) const
 }
 
 vector<bool> 
-CVQualifiers::random_looser_consts(void) const
+TypeQualifiers::random_looser_consts(void) const
 {
 	vector<bool> consts;
 	size_t i;
@@ -428,7 +428,7 @@ CVQualifiers::random_looser_consts(void) const
 }
 
 vector<bool> 
-CVQualifiers::random_looser_volatiles(void) const
+TypeQualifiers::random_looser_volatiles(void) const
 {
 	vector<bool> volatiles;
 	size_t i;
@@ -448,7 +448,7 @@ CVQualifiers::random_looser_volatiles(void) const
 }
 
 void 
-CVQualifiers::add_qualifiers(bool is_const, bool is_volatile)
+TypeQualifiers::add_qualifiers(bool is_const, bool is_volatile)
 {
 	is_consts.push_back(is_const);
 	is_volatiles.push_back(is_volatile);
@@ -456,10 +456,10 @@ CVQualifiers::add_qualifiers(bool is_const, bool is_volatile)
 
 
 // actually add qualifiers to pointers
-CVQualifiers 
-CVQualifiers::random_add_qualifiers(bool no_volatile) const
+TypeQualifiers 
+TypeQualifiers::random_add_qualifiers(bool no_volatile) const
 {
-	CVQualifiers qfer = *this;
+	TypeQualifiers qfer = *this;
 	if (CGOptions::match_exact_qualifiers()) {
 		qfer.add_qualifiers(false, false);
 		return qfer;
@@ -484,7 +484,7 @@ CVQualifiers::random_add_qualifiers(bool no_volatile) const
 }
 
 void 
-CVQualifiers::remove_qualifiers(int len)
+TypeQualifiers::remove_qualifiers(int len)
 {
 	int i;
 	for (i=0; i<len; i++) {
@@ -493,8 +493,8 @@ CVQualifiers::remove_qualifiers(int len)
 	}
 }
 
-CVQualifiers 
-CVQualifiers::indirect_qualifiers(int level) const
+TypeQualifiers 
+TypeQualifiers::indirect_qualifiers(int level) const
 {
 	if (level == 0 || wildcard) {
 		return *this;
@@ -502,13 +502,13 @@ CVQualifiers::indirect_qualifiers(int level) const
 	// taking address
 	else if (level < 0) {
 		assert(level == -1);
-		CVQualifiers qfer = *this;
+		TypeQualifiers qfer = *this;
 		qfer.add_qualifiers(false, false);
 		return qfer;
 	}
 	// dereference
 	else {
-		CVQualifiers qfer = *this;
+		TypeQualifiers qfer = *this;
 		qfer.remove_qualifiers(level);
 		return qfer;
 	}
@@ -518,76 +518,16 @@ CVQualifiers::indirect_qualifiers(int level) const
  * check if the indirect depth of type matches qualifier size
  */
 bool 
-CVQualifiers::sanity_check(const Type* t) const
+TypeQualifiers::SanityCheck(const Type* t) const
 {
 	assert(t);
 	int level = t->get_indirect_level();
 	assert(level >= 0);
 	return wildcard || (is_consts.size() == is_volatiles.size() && (static_cast<size_t>(level)+1) == is_consts.size());
-}
-
-void
-CVQualifiers::output_qualified_type(const Type* t, std::ostream &out) const
-{
-	assert(t);
-	assert(sanity_check(t));
-	size_t i;
-	const Type* base = t->get_base_type();
-	for (i=0; i<is_consts.size(); i++) {
-		if (i>0) {
-			out << "*";
-		}
-		if (is_consts[i]) {
-			if (!CGOptions::consts())
-				assert(0);
-			if (i > 0) out << " ";
-			out << "const ";
-		}
-		if (is_volatiles[i]) {
-			if (!CGOptions::volatiles())
-				assert(0);
-			if (i > 0) out << " ";
-			out << "volatile ";
-		}
-		if (i==0) {
-			base->Output(out);
-			out << " ";
-		}
-	}
-}
-
-void
-CVQualifiers::output_qualified_type_with_deputy_annotation(const Type* t, std::ostream &out, const vector<string>& annotations) const
-{
-	assert(t);
-	assert(sanity_check(t));
-	assert(is_consts.size() == annotations.size()+1);
-	size_t i;
-	const Type* base = t->get_base_type();
-	for (i=0; i<is_consts.size(); i++) {
-		if (i>0) {
-			out << "* ";
-			out << annotations[i-1] << " ";
-		}
-		if (is_consts[i]) {
-			if (!CGOptions::consts())
-				assert(0);
-			out << "const ";
-		}
-		if (is_volatiles[i]) {
-			if (!CGOptions::volatiles())
-				assert(0);
-			out << "volatile ";
-		}
-		if (i==0) {
-			base->Output(out);
-			out << " ";
-		}
-	}
-}
+}  
 
 bool 
-CVQualifiers::is_const_after_deref(int deref_level) const 
+TypeQualifiers::is_const_after_deref(int deref_level) const 
 {
 	if (deref_level < 0) {
 		return false;
@@ -598,7 +538,7 @@ CVQualifiers::is_const_after_deref(int deref_level) const
 }
 	
 bool 
-CVQualifiers::is_volatile_after_deref(int deref_level) const 
+TypeQualifiers::is_volatile_after_deref(int deref_level) const 
 {
 	if (deref_level < 0) {
 		return false;
@@ -615,7 +555,7 @@ CVQualifiers::is_volatile_after_deref(int deref_level) const
 }
 
 void 
-CVQualifiers::set_const(bool is_const, int pos)
+TypeQualifiers::set_const(bool is_const, int pos)
 {
 	int len = is_consts.size();
 	if (len > 0) {
@@ -624,7 +564,7 @@ CVQualifiers::set_const(bool is_const, int pos)
 }
 
 void 
-CVQualifiers::set_volatile(bool is_volatile, int pos)
+TypeQualifiers::set_volatile(bool is_volatile, int pos)
 {
 	int len = is_volatiles.size();
 	if (len > 0) {
@@ -633,7 +573,7 @@ CVQualifiers::set_volatile(bool is_volatile, int pos)
 }
 
 void
-CVQualifiers::restrict(Effect::Access access, const CGContext& cg_context)
+TypeQualifiers::restrict(Effect::Access access, const CGContext& cg_context)
 {
 	if (access == Effect::WRITE) {
 		set_const(false);
@@ -649,7 +589,7 @@ CVQualifiers::restrict(Effect::Access access, const CGContext& cg_context)
  * enumerate the first level of qualifiers.
  */
 void
-CVQualifiers::get_all_qualifiers(vector<CVQualifiers> &quals, unsigned int const_prob, unsigned int volatile_prob)
+TypeQualifiers::get_all_qualifiers(vector<TypeQualifiers> &quals, unsigned int const_prob, unsigned int volatile_prob)
 {
 	Enumerator<string> qual_enumerator;
 	qual_enumerator.add_bool_elem("const_prob", const_prob);
@@ -664,38 +604,10 @@ CVQualifiers::get_all_qualifiers(vector<CVQualifiers> &quals, unsigned int const
 
 		consts.push_back(isConst);
 		volatiles.push_back(isVolatile);
-		CVQualifiers qual(consts, volatiles);
+		TypeQualifiers qual(consts, volatiles);
 
 		quals.push_back(qual);
 	}
 }
 
-void
-CVQualifiers::OutputFirstQuals(std::ostream &out) const
-{
-	if (is_consts.size() > 0 && is_consts[0]) {
-		if (!CGOptions::consts())
-			assert(0);
-		out << "const ";
-	}
 
-	if (is_volatiles.size() > 0 && is_volatiles[0]) {
-		if (!CGOptions::volatiles())
-			assert(0);
-		out << "volatile ";
-	}
-}
-
-void 
-CVQualifiers::output() const
-{
-	size_t i;
-	for (i=0; i<is_consts.size(); i++) {
-		cout << is_consts[i] << " ";
-	}
-	cout << ", ";
-	for (i=0; i<is_volatiles.size(); i++) {
-		cout << is_volatiles[i] << " ";
-	}
-	cout << endl;
-}

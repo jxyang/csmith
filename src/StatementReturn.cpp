@@ -38,8 +38,7 @@
 #include "FactMgr.h"
 #include "FactPointTo.h"
 #include "Bookkeeper.h"
-
-#include "util.h" 
+#include "AbsOutputMgr.h"
 
 using namespace std;
 
@@ -120,30 +119,4 @@ StatementReturn::StatementReturn(const StatementReturn &sr)
 StatementReturn::~StatementReturn(void)
 {
 	delete &var;
-}
-
-/*
- *
- */
-void
-StatementReturn::Output(std::ostream &out, FactMgr* /*fm*/, int indent) const
-{
-	output_tab(out, indent);
-	// XXX --- Fix this.  Outputting two stmts instead of one is bad mojo.
-	if (CGOptions::depth_protect()) {
-		out << "DEPTH--;" << endl;
-	} 
-	out << "return "; 
-	var.Output(out);
-	out << ";";
-	outputln(out);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+} 

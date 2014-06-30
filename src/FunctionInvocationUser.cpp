@@ -55,16 +55,15 @@
 #include "Variable.h"
 #include "FactMgr.h"
 #include "Statement.h"
-#include "StatementExpr.h"
+#include "StatementCall.h"
 #include "StatementAssign.h"
 #include "Block.h"
 #include "Fact.h"
 #include "SafeOpFlags.h"
+#include "AbsOutputMgr.h"
 
 
-using namespace std;
-
-static vector<bool> needcomma;  // Flag to track output of commas
+using namespace std; 
 
 static vector<const FunctionInvocationUser*> invocations;   // list of function calls
 static vector<const Fact*> return_facts;              // list of return facts
@@ -178,7 +177,7 @@ FunctionInvocationUser::clone() const
    with execution order, and the dataflow analyzer doesn't need to visit the function twice 
  */
 FunctionInvocationUser*
-FunctionInvocationUser::build_invocation_and_function(CGContext &cg_context, const Type* type, const CVQualifiers* qfer)
+FunctionInvocationUser::build_invocation_and_function(CGContext &cg_context, const Type* type, const TypeQualifiers* qfer)
 {
 	assert(type);		// return type must be provided
 	FactMgr* caller_fm = get_fact_mgr(&cg_context);
@@ -397,77 +396,5 @@ const Type &
 FunctionInvocationUser::get_type(void) const
 {
 	return *(func->return_type);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-/*
- *
- */
-static int
-OutputActualParamExpression(const Expression *expr, std::ostream *pOut)
-{
-	std::ostream &out = *pOut;
-	if (needcomma.back()) {
-		out << ", ";
-	}
-	needcomma.back() = true;
-	expr->Output(out);
-    // for MSVC: must return something to be able to pass to a "map" function
-    return 0;             
-}
-
-/*
- *
- */
-static void
-OutputExpressionVector(const vector<const Expression*> &var, std::ostream &out)
-{
-	needcomma.push_back(false);
-	for_each(var.begin(), var.end(),
-			 std::bind2nd(std::ptr_fun(OutputActualParamExpression), &out));
-	needcomma.pop_back();
-}
-
-/*
- *
- */
-void
-FunctionInvocationUser::Output(std::ostream &out) const
-{
-	out << func->name << "(";
-	OutputExpressionVector(param_value, out);
-	out << ")";
-}
-
-/*
- *
- */
-void
-FunctionInvocationUser::indented_output(std::ostream &out, int indent) const
-{
-	if (has_simple_params()) {
-		output_tab(out, indent);
-		Output(out);
-		return;
-	}
-	output_tab(out, indent);
-	out << func->name;
-	outputln(out);
-	output_open_encloser("(", out, indent); 
-	size_t i;
-	for (i=0; i<param_value.size(); i++) {
-		if (i > 0) outputln(out);
-		param_value[i]->indented_output(out, indent);
-		out << ",";
-	}
-	output_close_encloser(")", out, indent);
-}
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+} 
+ 

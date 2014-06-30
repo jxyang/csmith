@@ -56,15 +56,15 @@ public:
 
 	virtual const Type &get_type(void) const;
 
-	virtual bool compatible(const Variable *v) const;
-
-	virtual void Output(std::ostream &) const;
-
-	virtual void indented_output(std::ostream &out, int indent) const;
+	virtual bool compatible(const Variable *v) const;  
 
 	virtual bool safe_invocation() const;
 
 	virtual bool equals(int num) const;
+
+	eUnaryOps get_operation() const { return eFunc;}
+
+	std::string get_tmp_var() const { return tmp_var; } 
 
 	virtual bool is_0_or_1(void) const { return eFunc == eNot;}
 

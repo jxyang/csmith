@@ -71,11 +71,7 @@ public:
 
 	//
 	virtual bool set_depth_protect(bool b) { depth_protect = b; return b; }
-	virtual bool get_depth_protect(void) { return depth_protect; }
-
-	virtual void Output(std::ostream &out, FactMgr* fm, int indent=0) const;
-	
-	void OutputTmpVariableList(std::ostream &out, int indent) const;
+	virtual bool get_depth_protect(void) { return depth_protect; }  
 
     Block* random_parent_block(void);
 

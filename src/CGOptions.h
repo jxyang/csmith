@@ -257,21 +257,13 @@ public:
 	static std::string dump_random_probabilities(std::string p);
 
 	static std::string probability_configuration(void);
-	static std::string probability_configuration(std::string p);
-
-	static bool step_hash_by_stmt(void);
-	static bool step_hash_by_stmt(bool p);
+	static std::string probability_configuration(std::string p); 
 
 	static bool blind_check_global(void);
 	static bool blind_check_global(bool p);
 
 	static int stop_by_stmt(void);
-	static int stop_by_stmt(int p);
-
-	static void monitored_funcs(string fnames);
-
-	static bool deputy(void);
-	static bool deputy(bool p);
+	static int stop_by_stmt(int p);  
 
 	static bool const_as_condition(void);
 	static bool const_as_condition(bool p);
@@ -412,9 +404,7 @@ private:
 	static bool concise_;
 	static bool nomain_;
 	static bool compound_assignment_;
-	static int stop_by_stmt_;
-	static bool deputy_;
-	static bool step_hash_by_stmt_;
+	static int stop_by_stmt_;  
 	static bool blind_check_global_;
 	static std::string dfs_debug_sequence_;  
 	static int	func1_max_params_; 

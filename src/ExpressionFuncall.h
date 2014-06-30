@@ -48,7 +48,7 @@ class ExpressionFuncall : public Expression
 {
 public:
 	// Factory method.
-	static Expression *make_random(CGContext &cg_context, const Type* type, const CVQualifiers* qfer=0); 
+	static Expression *make_random(CGContext &cg_context, const Type* type, const TypeQualifiers* qfer=0); 
 
 	explicit ExpressionFuncall(const FunctionInvocation &fi);
 
@@ -56,7 +56,7 @@ public:
 
 	virtual Expression* clone() const;
 
-	virtual CVQualifiers get_qualifiers(void) const;
+	virtual TypeQualifiers get_qualifiers(void) const;
 
 	virtual void get_eval_to_subexps(vector<const Expression*>& subs) const {subs.push_back(this);}
 
@@ -82,10 +82,7 @@ public:
 	virtual bool is_0_or_1(void) const { return invoke.is_0_or_1();}
 
 	virtual std::vector<const ExpressionVariable*> get_dereferenced_ptrs(void) const;
-	virtual void get_referenced_ptrs(std::vector<const Variable*>& ptrs) const;
-	
-	void Output(std::ostream &) const;
-	virtual void indented_output(std::ostream &out, int indent) const;
+	virtual void get_referenced_ptrs(std::vector<const Variable*>& ptrs) const; 
 
 private:
 	const FunctionInvocation &invoke;

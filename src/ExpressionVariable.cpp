@@ -49,7 +49,7 @@
  *
  */
 ExpressionVariable *
-ExpressionVariable::make_random(CGContext &cg_context, const Type* type, const CVQualifiers* qfer, bool as_param, bool as_return)
+ExpressionVariable::make_random(CGContext &cg_context, const Type* type, const TypeQualifiers* qfer, bool as_param, bool as_return)
 { 
 	Function *curr_func = cg_context.get_current_func(); 
 	FactMgr* fm = get_fact_mgr_for_func(curr_func);
@@ -183,36 +183,11 @@ ExpressionVariable::get_indirect_level(void) const
 /*
  *
  */
-CVQualifiers 
+TypeQualifiers 
 ExpressionVariable::get_qualifiers(void) const
 {
 	int indirect = get_indirect_level();
 	return var.qfer.indirect_qualifiers(indirect);
-}
-
-/*
- *
- */
-void
-ExpressionVariable::Output(std::ostream &out) const
-{
-	output_cast(out); 
-	int i;
-    int indirect_level = get_indirect_level(); 
-    if (indirect_level > 0) {
-        out << "(";
-		for (i=0; i<indirect_level; i++) {
-			out << "*";
-		}
-	}
-	else if (indirect_level < 0) {
-		assert(indirect_level == -1);
-		out << "&";
-    }
-	var.Output(out);
-    if (indirect_level > 0) {
-        out << ")";
-    }
 }
 
 std::vector<const ExpressionVariable*> 

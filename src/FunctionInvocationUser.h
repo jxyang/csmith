@@ -60,7 +60,7 @@ class FunctionInvocationUser: public FunctionInvocation
 
 public:
 	// factory method
-	static FunctionInvocationUser* build_invocation_and_function(CGContext &cg_context, const Type* type, const CVQualifiers* qfer);
+	static FunctionInvocationUser* build_invocation_and_function(CGContext &cg_context, const Type* type, const TypeQualifiers* qfer);
 
 	virtual ~FunctionInvocationUser(void);
 
@@ -68,11 +68,7 @@ public:
 
 	virtual bool compatible(const Variable *) const { return false; }
 
-	virtual const Type &get_type(void) const;
-
-	virtual void Output(std::ostream &) const;
-
-	virtual void indented_output(std::ostream &out, int indent) const;
+	virtual const Type &get_type(void) const; 
 
 	virtual bool safe_invocation() const { return true; }
 

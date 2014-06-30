@@ -43,6 +43,7 @@
 #include <cassert>
 #include <sstream>
 
+#include "AbsOutputMgr.h"
 #include "CGContext.h"
 #include "CGOptions.h"
 #include "Function.h"
@@ -220,69 +221,8 @@ Block::create_new_tmp_var(enum eSimpleType type) const
 	string var_name = gensym("t_");
 	macro_tmp_vars[var_name] = type;
 	return var_name;
-}
-
-void
-Block::OutputTmpVariableList(std::ostream &out, int indent) const
-{
-	std::map<string, enum eSimpleType>::const_iterator i;
-	for (i = macro_tmp_vars.begin(); i != macro_tmp_vars.end(); ++i) {
-		std::string name = (*i).first;
-		enum eSimpleType type = (*i).second;
-		output_tab(out, indent);
-		Type::get_simple_type(type).Output(out);
-		out << " " << name << " = 0;" << std::endl;
-	}
-}
-
-/*
- *
- */
-static void
-OutputStatementList(const vector<Statement*> &stms, std::ostream &out, FactMgr* fm, int indent)
-{
-	size_t i;
-	for (i=0; i<stms.size(); i++) {
-		const Statement* stm = stms[i];
-		stm->pre_output(out, fm, indent);
-		stm->Output(out, fm, indent);
-		stm->post_output(out, fm, indent);
-	}
-}
-
-/*
- *
- */
-void
-Block::Output(std::ostream &out, FactMgr* fm, int indent) const
-{ 
-	output_tab(out, indent);
-	out << "{ ";
-	std::ostringstream ss; 
-	ss << "block id: " << stm_id;
-	output_comment_line(out, ss.str());
-	
-	if (CGOptions::depth_protect()) {
-		out << "DEPTH++;" << endl;
-	}
-
-	indent++;
-	if (CGOptions::math_notmp())
-		OutputTmpVariableList(out, indent);
-
-	OutputVariableList(local_vars, out, indent);
-	OutputStatementList(stms, out, fm, indent);
-	
-	if (CGOptions::depth_protect()) {
-		out << "DEPTH--;" << endl;
-	}
-	indent--;
-
-	output_tab(out, indent);
-	out << "}";
-	outputln(out);
-}
-
+} 
+ 
 /* find the last effective statement for this block, note
  * a return statement terminates the block before reaching the
  * the last statement
@@ -764,13 +704,4 @@ Block::post_creation_analysis(CGContext& cg_context, const Effect& pre_effect)
 		Statement* sr = append_return_stmt(cg_context);
 		fm->set_fact_out(this, fm->map_facts_out[sr]);
 	}
-}
-	
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+} 

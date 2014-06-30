@@ -46,9 +46,7 @@ class CFGEdge
 public:  
 	CFGEdge(const Statement* src, const Statement* dest, bool post_dest, bool back_link);
 	CFGEdge(const CFGEdge &edge);
-	virtual ~CFGEdge(void);
-
-	// void Output(std::ostream &out) const;
+	virtual ~CFGEdge(void); 
 
 	const Statement* src;
 	const Statement* dest;

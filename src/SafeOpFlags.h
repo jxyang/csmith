@@ -75,6 +75,10 @@ public:
 
 	bool get_op2_sign() { return op2_; }
 
+	int GetWrapperID(eBinaryOps op) const { return to_id(to_string(op));}
+
+	int GetWrapperID(eUnaryOps op) const { return to_id(to_string(op));}
+
 	enum SafeOpSize get_op_size() { return op_size_; }
 
 	std::string to_string(enum eBinaryOps op) const;

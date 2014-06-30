@@ -38,6 +38,7 @@
 #include "SafeOpFlags.h"
 #include "CGContext.h"
 #include "random.h"
+#include "AbsOutputMgr.h"
 
 using namespace std;
 
@@ -193,96 +194,4 @@ bool
 FunctionInvocationUnary::safe_invocation() const
 {
 	return (eFunc != eMinus);
-}
-
-/*
- *
- */
-void
-FunctionInvocationUnary::Output(std::ostream &out) const
-{
-	bool need_cast = false;
-	out << "(";
-	switch (eFunc) {
-	default:
-		assert(!"invalid operator in FunctionInvocationUnary::Output()");
-		break;
-
-	case eMinus:
-		if (CGOptions::avoid_signed_overflow()) { 
-			assert(op_flags);
-			string fname = op_flags->to_string(eFunc);
-			int id = SafeOpFlags::to_id(fname);
-			// don't use safe math wrapper if this function is specified in "--safe-math-wrapper"
-			if (CGOptions::safe_math_wrapper(id)) {
-				out << fname << "(";  
-				if (CGOptions::math_notmp()) {
-					out << tmp_var << ", ";
-				}
-				param_value[0]->Output(out);
-				if (CGOptions::identify_wrappers()) {
-					out << ", " << id;
-				}
-				out << ")"; 
-				break;
-			}
-		}
-		need_cast = true;
-		// Fallthrough!
-
-	case ePlus:
-	case eNot:
-	case eBitNot:
-		OutputStandardFuncName(eFunc, out);
-		// explicit type casting for op1
-		if (need_cast) {
-			out << "("; 
-			op_flags->OutputSize(out);
-			out << ")";
-		}
-		param_value[0]->Output(out);
-		break;
-	}
-	out << ")";
-}
-
-/*
- *
- */
-void
-FunctionInvocationUnary::indented_output(std::ostream &out, int indent) const
-{
-	out << "(";
-	switch (eFunc) {
-	default:
-		assert(!"invalid operator in FunctionInvocationUnary::Output()");
-		break;
-
-	case eMinus:
-		if (CGOptions::avoid_signed_overflow()) {
-			out << op_flags->to_string(eFunc); 
-			output_open_encloser("(", out, indent);  
-			param_value[0]->indented_output(out, indent);
-			output_close_encloser(")", out, indent); 
-			break;
-		}
-		// Fallthrough!
-
-	case ePlus:
-	case eNot:
-	case eBitNot:
-		OutputStandardFuncName(eFunc, out);
-		param_value[0]->indented_output(out, indent);
-		break;
-	}
-	out << ")";
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+} 

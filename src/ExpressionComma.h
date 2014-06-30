@@ -41,13 +41,13 @@ class ExpressionComma : public Expression
 {
 public:
 	// Factory method.
-	static ExpressionComma *make_random(CGContext &cg_context, const Type* type, const CVQualifiers* qfer=0);  
+	static ExpressionComma *make_random(CGContext &cg_context, const Type* type, const TypeQualifiers* qfer=0);  
 
 	virtual ~ExpressionComma(void);  
 
 	Expression* clone(void) const;
 
-	virtual CVQualifiers get_qualifiers(void) const { return rhs.get_qualifiers();}  
+	virtual TypeQualifiers get_qualifiers(void) const { return rhs.get_qualifiers();}  
 
 	virtual void get_eval_to_subexps(vector<const Expression*>& subs) const;
 
@@ -69,9 +69,7 @@ public:
 	virtual unsigned int get_complexity(void) const { return get_lhs()->get_complexity() + get_rhs()->get_complexity();}
 
 	const Expression* get_lhs(void) const { return &lhs;}
-	const Expression* get_rhs(void) const { return &rhs;}
-	void Output(std::ostream &) const;
-	virtual void indented_output(std::ostream &out, int indent) const;
+	const Expression* get_rhs(void) const { return &rhs;}  
 
 private:
 	const Expression& lhs;
@@ -81,11 +79,4 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#endif // EXPRESSION_COMMA_H
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+#endif // EXPRESSION_COMMA_H 

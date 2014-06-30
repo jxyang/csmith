@@ -79,7 +79,7 @@ class StatementAssign : public Statement
 {
 public:
 	// Factory method.
-	static StatementAssign *make_random(CGContext &cg_context, const Type* type=0, const CVQualifiers* qfer=0);
+	static StatementAssign *make_random(CGContext &cg_context, const Type* type=0, const TypeQualifiers* qfer=0);
 
 	static StatementAssign *make_possible_compound_assign(CGContext &cg_context,
 						 const Lhs &l,
@@ -99,6 +99,7 @@ public:
 	bool is_simple_assign(void) const { return op == eSimpleAssign;}
 
 	const Lhs* get_lhs(void) const {return &lhs;};
+	const eAssignOps GetOp(void) const { return op;}
 	const Expression* get_rhs(void) const { return rhs;};
 	const Expression* get_expr(void) const { return &expr;};
 
@@ -114,16 +115,12 @@ public:
 	virtual bool visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const;
 
 	virtual std::vector<const ExpressionVariable*> get_dereferenced_ptrs(void) const;
-	virtual bool has_uncertain_call_recursive(void) const;
+	virtual bool has_uncertain_call_recursive(void) const;  
 
-	virtual void Output(std::ostream &out, FactMgr* fm, int indent = 0) const;
-	void output_op(std::ostream &out) const;
-
-	// XXX --- This should go away, once assignments are properly modeled as
-	// expressions.
-	virtual void OutputAsExpr(std::ostream &out) const;
-
-	void OutputSimple(std::ostream &out) const;
+	const SafeOpFlags *op_flags;	
+	// used for AssignAdd etc;
+	std::string tmp_var1;
+	std::string tmp_var2;
 	
 private:
 	static eAssignOps AssignOpsProbability(const Type* type);
@@ -132,11 +129,7 @@ private:
 	const Lhs   &lhs;
 	const Expression &expr;
 	// the real rhs canonized from compound operators, for example rhs for "i += 1" is "i + 1"
-	const Expression* rhs;			
-	const SafeOpFlags *op_flags;
-	// used for AssignAdd etc;
-	std::string tmp_var1;
-	std::string tmp_var2;
+	const Expression* rhs;	
 
 	static DistributionTable assignOpsTable_;
 

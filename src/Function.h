@@ -55,7 +55,7 @@ class Statement;
 class CGContext;
 class Fact;
 class Constant;
-class CVQualifiers;
+class TypeQualifiers;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -69,22 +69,23 @@ public:
 	// Factory methods.
 	static Function *make_first(void);
 	// type = 0 means we don't care about the return type
-	static Function *make_random(const CGContext& cg_context, const Type* type = 0, const CVQualifiers* qfer=0);
+	static Function *make_random(const CGContext& cg_context, const Type* type = 0, const TypeQualifiers* qfer=0);
 	// generate the signature, but not the body
-	static Function* make_random_signature(const CGContext& cg_context, const Type* type, const CVQualifiers* qfer=0);
+	static Function* make_random_signature(const CGContext& cg_context, const Type* type, const TypeQualifiers* qfer=0);
 
-	static Function* choose_func(vector<Function *> funcs, const CGContext& cg_context, const Type* type, const CVQualifiers* qfer);
+	static Function* choose_func(vector<Function *> funcs, const CGContext& cg_context, const Type* type, const TypeQualifiers* qfer);
 
 	static Function *get_one_function(const vector<Function *> &ok_funcs);
+
+	static vector<const Function*> GetRandomFunctions(void);
 
 	static void doFinalization();
 	static bool reach_max_functions_cnt();
 
 	void generate_body_with_known_params(const CGContext &prev_context, Effect& effect_accum);
-	void compute_summary(void);
+	void compute_summary(void); 
 
-	void Output(std::ostream &);
-	void OutputForwardDecl(std::ostream &);
+	bool SanityCheck() const;
 
 	bool is_built(void) const { return (build_state == BUILT); }
 	bool need_return_stmt();
@@ -127,9 +128,7 @@ private:
 	static int deleteFunction(Function* func);
 
 	Function(const std::string &name, const Type *return_type);
-	Function(const std::string &name, const Type *return_type, bool is_builtin);
-	void OutputHeader(std::ostream &);
-	void OutputFormalParamList(std::ostream &);
+	Function(const std::string &name, const Type *return_type, bool is_builtin);  
 	void GenerateBody(const CGContext& prev_context);
 	void make_return_const();
 
@@ -144,9 +143,7 @@ private:
 void GenerateFunctions(void);
 Function *GetFirstFunction(void);
 // unsigned
-long FuncListSize(void);
-void OutputForwardDeclarations(std::ostream &out);
-void OutputFunctions(std::ostream &out);
+long FuncListSize(void); 
 
 const std::vector<Function*>& get_all_functions(void);
 FactMgr* get_fact_mgr_for_func(const Function* func); 

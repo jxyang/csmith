@@ -80,8 +80,7 @@ public:
 
 	// output functions
 	virtual bool is_assertable(const Statement* /*s*/) const { return false;}
-	virtual void Output(std::ostream &out) const;
-	virtual void OutputAssertion(std::ostream &/*out*/, const Statement* /*s*/) const {};
+	virtual std::string ToString(void) const; 
    	
 	// constants to indicate lattice top/bottom
 	static const int TOP;

@@ -58,7 +58,7 @@
 #include "Variable.h"
 #include "Bookkeeper.h"
 #include "SafeOpFlags.h"
-#include "CVQualifiers.h"
+#include "TypeQualifiers.h"
 
 #include "Probabilities.h"
 #include "CompatibleChecker.h" 
@@ -76,7 +76,7 @@ FunctionInvocation *
 FunctionInvocation::make_random(bool is_std_func,
 								CGContext &cg_context, 
                                 const Type* type,
-								const CVQualifiers* qfer)
+								const TypeQualifiers* qfer)
 {
 	FunctionInvocation *fi = 0;  
 	// If we are looking for a program-defined function, try to find one. 
@@ -460,10 +460,10 @@ FunctionInvocation::visit_unordered_params(vector<const Fact*>& inputs, CGContex
 	return true;
 }
 
-CVQualifiers 
+TypeQualifiers 
 FunctionInvocation::get_qualifiers(void) const
 {
-	CVQualifiers qfer;
+	TypeQualifiers qfer;
 	if (invoke_type == eFuncCall) { 
 		const FunctionInvocationUser* func_call = dynamic_cast<const FunctionInvocationUser*>(this);
 		assert(func_call->get_func());
@@ -616,13 +616,4 @@ bool
 FunctionInvocation::IsOrderedStandardFunc(eBinaryOps eFunc)
 {
 	return ((eFunc == eAnd) || (eFunc == eOr));
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+} 

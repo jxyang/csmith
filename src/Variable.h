@@ -48,8 +48,8 @@
 using namespace std;
 
 #include "Effect.h"
-#include "Type.h"
-#include "CVQualifiers.h"
+#include "Type.h" 
+#include "TypeQualifiers.h"
 #include "StringUtils.h"
 
 class CGContext;
@@ -64,14 +64,14 @@ class Variable
 	friend class VariableSelector;
 	friend class ArrayVariable;
 public:
-	static Variable *CreateVariable(const std::string &name, const Type *type, const Expression* init, const CVQualifiers* qfer);
+	static Variable *CreateVariable(const std::string &name, const Type *type, const Expression* init, const TypeQualifiers* qfer);
 	static Variable *CreateVariable(const std::string &name, const Type *type,
 			 bool isConst, bool isVolatile,
 			 bool isAuto, bool isStatic, bool isRegister, bool isBitfield, const Variable* isFieldVarOf);
 	static Variable *CreateVariable(const std::string &name, const Type *type,
 			 const vector<bool>& isConsts, const vector<bool>& isVolatiles,
 			 bool isAuto, bool isStatic, bool isRegister, bool isBitfield, const Variable* isFieldVarOf);
-
+	//static Variable *CreateTmpVariable(const std::string &name, const Type& type) { return new Variable(name, &type, NULL, &TypeQualifiers::NoQualifier);} 
 	static void doFinalization(void);
 
 	virtual ~Variable(void);
@@ -98,7 +98,7 @@ public:
 	bool is_packed_after_bitfield(void) const;
 	bool is_array_field(void) const;
 	bool is_virtual(void) const;
-	bool is_aggregate(void) const { return type && type->is_aggregate(); }
+	bool IsAggregate(void) const { return type && type->IsAggregate(); }
 	bool match(const Variable* v) const;
 	bool loose_match(const Variable* v) const;
 	bool is_pointer(void) const { return type && type->eType == ePointer;}
@@ -106,35 +106,22 @@ public:
 	int get_seq_num(void) const;
 	void find_pointer_fields(vector<const Variable*>& ptr_fields) const;
 
-	virtual std::string get_actual_name() const;
-	std::string to_string(void) const;
-	std::vector<std::string> deputy_annotation(void) const;
+	virtual std::string get_actual_name() const;  
 
 	// ISSUE: we treat volatiles specially
 	bool compatible(const Variable *v) const;
 	const Variable* get_named_var(void) const;
-	const Variable* match_var_name(const string& vname) const;
-	virtual void hash(std::ostream& out) const;
+	const Variable* match_var_name(const string& vname) const; 
 	virtual const Variable* get_collective(void) const;
 	virtual const ArrayVariable* get_array(string& field) const;
 	virtual int get_index_vars(vector<const Variable*>& /* vars */) const { return 0;}
 
 	///////////////////////////////////////////////////////////////////////
-	
-	virtual void Output(std::ostream &) const; 
-	int output_runtime_value(ostream &out, string prefix, string suffix, int indent, bool multi_lines=false) const;
-	int output_addressable_name(ostream &out, int indent) const;
-	int output_volatile_address(ostream &out, int indent, const string &fp_string, vector<string> &seen_names) const;
-	int output_volatile_fprintf(ostream &out, int indent, const string &name, 
-		const string &sizeof_string, const string &fp_string) const;
+	 
 	bool is_seen_name(vector<std::string> &seen_names, const std::string &name) const;
-	bool is_valid_volatile(void) const;
-	int output_value_dump(ostream &out, string prefix, int indent) const;
+	bool is_valid_volatile(void) const; 
 	void OutputAddrOf(std::ostream &) const;
-	void OutputForComment(std::ostream &) const;
-	virtual void OutputDef(std::ostream &out, int indent) const;
-	virtual void OutputDecl(std::ostream &) const;
-	virtual void output_qualified_type(std::ostream &out) const;
+	void OutputForComment(std::ostream &) const;   
 	virtual void OutputLowerBound(std::ostream &) const; 
 	virtual void OutputUpperBound(std::ostream &) const;
 
@@ -155,20 +142,19 @@ public:
 	bool isAccessOnce;
 	const Variable* field_var_of; //expanded from a struct/union
 	const bool isArray;
-	const CVQualifiers qfer;
-	static std::vector<const Variable*> &get_new_ctrl_vars();
+	const TypeQualifiers qfer;
+	static std::vector<const Variable*> &get_new_ctrl_vars(size_t count);
 	static std::vector<const Variable*> &get_last_ctrl_vars();
 
-	static const char sink_var_name[];
+	static const string sink_var_name;
 
 private:
-	Variable(const std::string &name, const Type *type, const Expression* init, const CVQualifiers* qfer);
-	Variable(const std::string &name, const Type *type, const Expression* init, const CVQualifiers* qfer, const Variable* isFieldVarOf, bool isArray);
+	Variable(const std::string &name, const Type *type, const Expression* init, const TypeQualifiers* qfer);
+	Variable(const std::string &name, const Type *type, const Expression* init, const TypeQualifiers* qfer, const Variable* isFieldVarOf, bool isArray);
 	Variable(const std::string &name, const Type *type,
 			 const vector<bool>& isConsts, const vector<bool>& isVolatiles,
 			 bool isAuto, bool isStatic, bool isRegister, bool isBitfield, const Variable* isFieldVarOf);
-
-	static std::vector<const Variable*>& new_ctrl_vars(void);
+	 
 	static std::vector< std::vector<const Variable*>* > ctrl_vars_vectors;
 	static unsigned long ctrl_vars_count;
 
@@ -176,12 +162,8 @@ private:
 };
  
 void OutputVariableList(const std::vector<Variable*> &var, std::ostream &out, int indent = 0);
-void OutputVariableDeclList(const std::vector<Variable*> &var, std::ostream &out, std::string prefix = "", int indent = 0);
-void OutputArrayInitializers(const vector<Variable*>& vars, std::ostream &out, int indent);
-void OutputArrayCtrlVars(const vector<const Variable*>& ctrl_vars, std::ostream &out, size_t dimen, int indent);
-void OutputVolatileAddress(const vector<Variable*> &vars, std::ostream &out, int indent, const string &fp_string);
-void MapVariableList(const vector<Variable*> &var, std::ostream &out, int (*func)(Variable *var, std::ostream *pOut));
-int HashVariable(Variable *var, std::ostream *pOut);
+void OutputVariableDeclList(const std::vector<Variable*> &var, std::ostream &out, std::string prefix = "", int indent = 0); 
+void OutputArrayCtrlVars(const vector<const Variable*>& ctrl_vars, std::ostream &out, size_t dimen, int indent);   
 
 int find_variable_in_set(const vector<const Variable*>& set, const Variable* v);
 int find_variable_in_set(const vector<Variable*>& set, const Variable* v);

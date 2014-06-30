@@ -56,24 +56,7 @@ Fact::Fact(eFactCategory e) :
 Fact::~Fact(void)
 {
 	// Nothing else to do.
-}
-
-/*
- * output an assertion about the fact to check the correctness of compiler 
- * or generation time analysis 
- */
-void 
-Fact::OutputAssertion(std::ostream &out, const Statement* s) const
-{
-	if (!is_top()) {
-		if (s && !is_assertable(s)) {
-			out << "//";
-		}
-        out << "assert ("; 
-        Output(out);
-        out << ");" << endl;
-    }
-}
+} 
 
 std::vector<const Fact*>
 Fact::abstract_fact_for_return(const std::vector<const Fact*>& facts, const ExpressionVariable* expr, const Function* func)
@@ -288,33 +271,4 @@ subset_facts(const FactVec& facts1, const FactVec& facts2)
 		return true;
 	}
 	return false;
-}
-
-void
-print_facts(const FactVec& facts)
-{
-	for (size_t i=0; i<facts.size(); i++) {
-		const Fact* f = facts[i];
-		f->OutputAssertion(cout);
-	}
-}
-
-void
-print_var_fact(const FactVec& facts, const char* vname)
-{
-	for (size_t i=0; i<facts.size(); i++) {
-		const Fact* f = facts[i];
-		if (f->get_var()->name == vname) {
-			f->OutputAssertion(cout);
-		}
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+} 

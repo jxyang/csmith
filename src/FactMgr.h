@@ -38,7 +38,7 @@ class StatementAssign;
 class StatementIf;
 class StatementReturn;
 class StatementFor;
-class StatementExpr;
+class StatementCall;
 class Block;
 class Expression;
 class Fact;
@@ -98,9 +98,8 @@ public:
 	void clear_map_visited(void);
 	void backup_stm_fact_maps(const Statement* stm, map<const Statement*, FactVec>& facts_in, map<const Statement*, FactVec>& facts_out);
 	void restore_stm_fact_maps(const Statement* stm, map<const Statement*, FactVec>& facts_in, map<const Statement*, FactVec>& facts_out);
-	void reset_stm_fact_maps(const Statement* stm);
+	void reset_stm_fact_maps(const Statement* stm); 
 
-	void output_assertions(std::ostream &out, const Statement* stm, int indent, bool post_condition);
 	void find_updated_final_facts(const Statement* stm, vector<Fact*>& facts);
 	void find_updated_facts(const Statement* stm, vector<const Fact*>& facts);
 

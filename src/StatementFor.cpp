@@ -51,6 +51,7 @@
 #include "Bookkeeper.h" 
 #include "StatementBreak.h"
 #include "CFGEdge.h"
+#include "AbsOutputMgr.h"
 
 #include "random.h"
 
@@ -340,22 +341,7 @@ StatementFor::StatementFor(Block* b, const StatementAssign &init,
 	  body(body)
 {
 	// Nothing else to do.
-}
-
-#if 0
-/*
- * unimplement it
- */
-StatementFor::StatementFor(const StatementFor &sf)
-	: Statement(sf.get_type()),
-	  init(sf.init),
-	  test(sf.test),
-	  incr(sf.incr),
-	  body(sf.body)
-{
-	// Nothing else to do.
-}
-#endif
+} 
 
 /*
  *
@@ -366,33 +352,9 @@ StatementFor::~StatementFor(void)
 	delete &test;
 	delete &incr;
 	delete &body;
-}
-
-void
-StatementFor::output_header(std::ostream& out, int indent) const
-{
-	output_tab(out, indent);
-	out << "for (";
-	init.OutputAsExpr(out);
-	out << "; ";
-	test.Output(out);
-	out << "; ";
-	incr.OutputAsExpr(out);
-	out << ")";
-	outputln(out);
-}
-
-/*
- *
- */
-void
-StatementFor::Output(std::ostream &out, FactMgr* fm, int indent) const
-{
-	output_header(out, indent);
-	body.Output(out, fm, indent);
-}
-
-bool 
+} 
+ 
+bool
 StatementFor::visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const
 {   
 	// walk the initializing statement
@@ -437,13 +399,4 @@ StatementFor::visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) co
 	// remove IV from context
 	cg_context.iv_bounds.erase(iv);
 	return true;
-} 
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+}  

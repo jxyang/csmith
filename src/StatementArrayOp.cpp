@@ -30,6 +30,7 @@
 #include "StatementArrayOp.h"
 #include <cassert> 
 #include "Common.h"
+#include "AbsOutputMgr.h"
 #include "Block.h"
 #include "CGContext.h"
 #include "CGOptions.h"
@@ -43,7 +44,7 @@
 #include "FactMgr.h"
 #include "Lhs.h"
 #include "SafeOpFlags.h"
-
+#include "AbsOutputMgr.h"
 #include "PartialExpander.h"
 #include "Bookkeeper.h" 
 #include "StatementBreak.h"
@@ -199,81 +200,6 @@ StatementArrayOp::~StatementArrayOp(void)
 	delete body;
 }
 
-void
-StatementArrayOp::output_header(std::ostream& out, int& indent) const
-{
-	size_t i;
-	for (i=0; i<array_var->get_dimension(); i++) {
-		if (i > 0) {
-			output_tab(out, indent);
-			out << "{";
-			outputln(out);
-			indent++;
-		}
-		output_tab(out, indent);
-		out << "for (";
-		ctrl_vars[i]->Output(out);
-		out << " = " << inits[i] << "; ";
-		ctrl_vars[i]->Output(out);
-		(incrs[i] > 0) ? out << " < " << array_var->get_sizes()[i] : out << " >= 0";
-		out << "; ";
-		ctrl_vars[i]->Output(out); 
-			
-		out << " += " << incrs[i] << ")"; 
-		outputln(out); 
-	} 
-}
-
-/*
- *
- */
-void
-StatementArrayOp::Output(std::ostream &out, FactMgr* fm, int indent) const
-{
-	size_t i;
-	output_header(out, indent);
-
-	if (body) {
-		body->Output(out, fm, indent);
-	}
-	else if (init_value) {
-		output_tab(out, indent);
-		out << "{";
-		outputln(out);
-		// cannot assign array members to a struct/union constant directly, has to create a "fake" struct var first
-		if (init_value->term_type == eConstant && array_var->is_aggregate()) {
-			output_tab(out, indent+1);
-			array_var->type->Output(out);
-			out << " tmp = ";
-			init_value->Output(out);
-			out << ";";
-			outputln(out);
-			output_tab(out, indent+1);
-			array_var->output_with_indices(out, ctrl_vars);
-			out << " = tmp;";
-			outputln(out);
-		}
-		else {
-			output_tab(out, indent+1);
-			array_var->output_with_indices(out, ctrl_vars);
-			out << " = ";
-			init_value->Output(out);
-			out << ";";
-			outputln(out);
-		}
-		output_tab(out, indent);
-		out << "}";
-		outputln(out);
-	}
-	// output the closing bracelets
-	for (i=1; i<array_var->get_dimension(); i++) {
-		indent--;
-		output_tab(out, indent);
-		out << "}";
-		outputln(out);
-	}
-}
-
 bool 
 StatementArrayOp::visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const
 {   
@@ -323,13 +249,4 @@ StatementArrayOp::visit_facts(vector<const Fact*>& inputs, CGContext& cg_context
 		fm->map_stm_effect[this] = cg_context.get_effect_stm();
 	} 
 	return true;
-} 
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+}  

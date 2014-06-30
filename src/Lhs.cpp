@@ -55,7 +55,7 @@ using namespace std;
  *
  */
 Lhs *
-Lhs::make_random(CGContext &cg_context, const Type* t, const CVQualifiers* qfer, bool compound_assign, bool no_signed_overflow)
+Lhs::make_random(CGContext &cg_context, const Type* t, const TypeQualifiers* qfer, bool compound_assign, bool no_signed_overflow)
 {
 	Function *curr_func = cg_context.get_current_func();  
 	FactMgr* fm = get_fact_mgr_for_func(curr_func);
@@ -82,7 +82,7 @@ Lhs::make_random(CGContext &cg_context, const Type* t, const CVQualifiers* qfer,
 			}
 		}
 		if (var==0) {
-			CVQualifiers new_qfer(*qfer);
+			TypeQualifiers new_qfer(*qfer);
 			if (!(new_qfer.wildcard)) {
 				new_qfer.restrict(Effect::WRITE, cg_context);
 			}  
@@ -199,33 +199,15 @@ Lhs::get_indirect_level(void) const
 /*
  *
  */
-CVQualifiers 
+TypeQualifiers 
 Lhs::get_qualifiers(void) const
 {
 	int indirect = get_indirect_level();
-	CVQualifiers qfer = var.qfer.indirect_qualifiers(indirect);
+	TypeQualifiers qfer = var.qfer.indirect_qualifiers(indirect);
 	assert(!qfer.is_const());
 	return qfer;
 }
-
-/*
- *
- */
-void
-Lhs::Output(std::ostream &out) const
-{ 
-	ExpressionVariable ev(var, type);
-	if (var.is_volatile() && CGOptions::wrap_volatiles()) {
-		out << "VOL_LVAL(";
-		ev.Output(out);
-		out << ", ";
-		type->Output(out);
-		out << ")";
-	} else {
-		ev.Output(out);
-	}
-}
-
+  
 bool
 Lhs::is_volatile(void) const
 {
@@ -375,13 +357,4 @@ bool
 Lhs::compatible(const Variable *v) const
 {
 	return var.compatible(v);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+} 

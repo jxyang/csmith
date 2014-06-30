@@ -46,6 +46,8 @@
 #include "FunctionInvocation.h"
 #include "FunctionInvocationUser.h"
 #include "FactMgr.h"
+#include "ProgramGenerator.h"
+#include "AbsOutputMgr.h"
 #include "Lhs.h"
 #include "random.h"
 
@@ -214,7 +216,7 @@ FactPointTo::rhs_to_lhs_transfer(const vector<const Fact*>& facts, const vector<
 			assert(indirect == -1);
 			return FactPointTo::make_facts(lvars, expvar->get_var()->get_collective()); 
 		} 
-		if (rhs->get_type().is_aggregate()) {
+		if (rhs->get_type().IsAggregate()) {
 			vector<const Variable*> vars = merge_pointees_of_pointer(expvar->get_var()->get_collective(), indirect, facts);
 			FactVec ret_facts;
 			for (size_t i=0; i<vars.size(); i++) {
@@ -239,7 +241,7 @@ FactPointTo::rhs_to_lhs_transfer(const vector<const Fact*>& facts, const vector<
 		// TODO: support pointer arithmetics
         if (fi->invoke_type == eFuncCall) {  
 			const FunctionInvocationUser* fiu = dynamic_cast<const FunctionInvocationUser*>(fi);
-			if (fiu->get_type().is_aggregate()) {
+			if (fiu->get_type().IsAggregate()) {
 				FactVec ret_facts;
 				vector<const Variable*> pointers;
 				fiu->get_func()->rv->find_pointer_fields(pointers);
@@ -631,62 +633,12 @@ FactPointTo::imply(const Fact& f) const
         }
     }
     return false;
-}
- 
-void output_var(const Variable* var, std::ostream &out)
-{
-	var->Output(out);
-	// for array of pointers, only asserting the first pointer in array probably is enough?
-	if (var->isArray)
-	{
-		size_t i;
-		const ArrayVariable* av = (const ArrayVariable*)var;
-		for (i=0; i<av->get_dimension(); i++) {
-			out << "[0]";
-		}
-	}
-}
+} 
 
-/*
- * 
- */
-void 
-FactPointTo::Output(std::ostream &out) const
+std::string
+FactPointTo::ToString() const
 { 
-	for (size_t i=0; i<point_to_vars.size(); i++) { 
-		if (i > 0) {
-            out << " || ";
-        } 
-		const Variable* pointee = point_to_vars[i];
-		if (pointee->isArray || pointee->is_array_field()) {
-			//const ArrayVariable* av = (const ArrayVariable*)pointee;
-			out << "(";
-			output_var(var, out);
-			out << " >= &";
-			pointee->OutputLowerBound(out);
-			out << " && ";
-			output_var(var, out);
-			out << " <= &";
-			pointee->OutputUpperBound(out);
-			out <<  ")";
-			continue;
-		}
-        output_var(var, out);
-        out << " == "; 
-		if (pointee == garbage_ptr) {
-			out << "dangling";
-		}
-		else if (pointee == tbd_ptr) {
-			out << "tbd";
-		}
-		else if (pointee == null_ptr) {
-			out << "0";
-		}
-		else {
-			out << "&";
-			pointee->Output(out);
-		}
-    }
+	return ProgramGenerator::CurrentOutputMgr()->FactPointsTo2Str(*this);
 }
 
 bool 

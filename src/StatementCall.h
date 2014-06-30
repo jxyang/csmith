@@ -46,15 +46,15 @@ class FactMgr;
 /*
  *
  */
-class StatementExpr : public Statement
+class StatementCall : public Statement
 {
 public:
 	// Factory method.
-	static StatementExpr *make_random(CGContext &cg_context);
+	static StatementCall *make_random(CGContext &cg_context);
 
-	StatementExpr(Block* b, const FunctionInvocation &e);
-	StatementExpr(const StatementExpr &se);
-	virtual ~StatementExpr(void);
+	StatementCall(Block* b, const FunctionInvocation &e);
+	StatementCall(const StatementCall &se);
+	virtual ~StatementCall(void);
 
 	//
 	const FunctionInvocation* get_invoke(void) const { return expr.get_invoke(); };
@@ -67,16 +67,14 @@ public:
 	virtual bool has_uncertain_call_recursive(void) const;
 	
 	virtual void get_blocks(std::vector<const Block*>& /* blks */) const {}; 
-	virtual void get_exprs(std::vector<const Expression*>& exps) const {exps.push_back(&expr);}
-
-	virtual void Output(std::ostream &out, FactMgr* fm, int indent = 0) const;
+	virtual void get_exprs(std::vector<const Expression*>& exps) const {exps.push_back(&expr);} 
 
 private:
 	const ExpressionFuncall expr;
 
 	//
 
-	StatementExpr &operator=(const StatementExpr &se); // unimplementable
+	StatementCall &operator=(const StatementCall &se); // unimplementable
 };
 
 ///////////////////////////////////////////////////////////////////////////////

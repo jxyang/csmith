@@ -27,7 +27,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "StatementExpr.h"
+#include "StatementCall.h"
 #include <iostream>
 #include "CGContext.h"
 #include "CGOptions.h"
@@ -37,6 +37,7 @@
 #include "Function.h"
 #include "ExpressionVariable.h"
 #include "FactMgr.h" 
+#include "AbsOutputMgr.h"
 
 using namespace std;
 
@@ -45,8 +46,8 @@ using namespace std;
 /*
  *
  */
-StatementExpr *
-StatementExpr::make_random(CGContext &cg_context)
+StatementCall *
+StatementCall::make_random(CGContext &cg_context)
 { 
 	FunctionInvocation *invoke;
 	// make copies
@@ -61,13 +62,13 @@ StatementExpr::make_random(CGContext &cg_context)
 		delete invoke; 
 		return 0; 
 	}
-	return new StatementExpr(cg_context.get_current_block(), *invoke);
+	return new StatementCall(cg_context.get_current_block(), *invoke);
 }
 
 /*
  *
  */
-StatementExpr::StatementExpr(Block* b, const FunctionInvocation &e)
+StatementCall::StatementCall(Block* b, const FunctionInvocation &e)
 	: Statement(eInvoke, b),
 	  expr(e)
 {
@@ -77,7 +78,7 @@ StatementExpr::StatementExpr(Block* b, const FunctionInvocation &e)
 /*
  *
  */
-StatementExpr::StatementExpr(const StatementExpr &se)
+StatementCall::StatementCall(const StatementCall &se)
 : Statement(se.get_type(), se.parent),
 	  expr(*se.get_invoke())
 {
@@ -87,25 +88,13 @@ StatementExpr::StatementExpr(const StatementExpr &se)
 /*
  *
  */
-StatementExpr::~StatementExpr(void)
+StatementCall::~StatementCall(void)
 {
 	//delete &expr;
-}
-
-/*
- *
- */
-void
-StatementExpr::Output(std::ostream &out, FactMgr* /*fm*/, int indent) const
-{
-	output_tab(out, indent);
-	expr.Output(out);
-	out << ";";
-	outputln(out);
-}
+} 
 
 bool 
-StatementExpr::visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const
+StatementCall::visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const
 { 
 	bool ok = expr.visit_facts(inputs, cg_context);
 
@@ -116,7 +105,7 @@ StatementExpr::visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) c
 }
 
 std::vector<const ExpressionVariable*> 
-StatementExpr::get_dereferenced_ptrs(void) const
+StatementCall::get_dereferenced_ptrs(void) const
 {
 	std::vector<const ExpressionVariable*> vars;
 	if (get_invoke()->invoke_type == eFuncCall) {
@@ -132,16 +121,7 @@ StatementExpr::get_dereferenced_ptrs(void) const
 }
 
 bool 
-StatementExpr::has_uncertain_call_recursive(void) const
+StatementCall::has_uncertain_call_recursive(void) const
 {
 	return expr.has_uncertain_call_recursive();
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+} 

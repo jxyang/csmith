@@ -34,7 +34,7 @@
 #include "ExpressionVariable.h"
 #include "Block.h"
 #include "Type.h"
-#include "util.h"
+#include "AbsOutputMgr.h"
 
 using namespace std;
 
@@ -432,7 +432,7 @@ bool
 Effect::field_is_read(const Variable *v) const
 { 
 	size_t j;
-	if (v->is_aggregate()) {  
+	if (v->IsAggregate()) {  
 		for (j=0; j<v->field_vars.size(); j++) {
 			Variable* field_var = v->field_vars[j];
 			if (is_read(field_var) || field_is_read(field_var)) {
@@ -450,7 +450,7 @@ bool
 Effect::field_is_written(const Variable *v) const
 { 
 	size_t j;
-	if (v->is_aggregate()) {  
+	if (v->IsAggregate()) {  
 		for (j=0; j<v->field_vars.size(); j++) {
 			Variable* field_var = v->field_vars[j];
 			if (is_written(field_var) || field_is_written(field_var)) {
@@ -566,8 +566,8 @@ Effect::clear(void)
 /*
  *
  */
-void
-Effect::Output(std::ostream &out) const
+std::string
+Effect::ToString() const
 {
 	vector<Variable *>::size_type len;
 	vector<Variable *>::size_type i;
@@ -592,7 +592,7 @@ Effect::Output(std::ostream &out) const
 	}
 	ss << endl;
 
-	output_comment_line(out, ss.str());
+	return ss.str();
 }
 
 /*

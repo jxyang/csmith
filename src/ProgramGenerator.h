@@ -27,38 +27,40 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef ABS_PROGRAM_GENERATOR_H
-#define ABS_PROGRAM_GENERATOR_H
+#ifndef PROGRAM_GENERATOR_H
+#define PROGRAM_GENERATOR_H 
 
-#include <string>
+class AbsOutputMgr;
 
-class OutputMgr;
-
-class AbsProgramGenerator {
+class ProgramGenerator  {
 public:
-	static AbsProgramGenerator* CreateInstance(int argc, char *argv[], unsigned long seed);
+	// factory method
+	static ProgramGenerator* CreateInstance(int argc, char *argv[], unsigned long seed);
 
-	static AbsProgramGenerator* GetInstance();
+	ProgramGenerator(int argc, char *argv[], unsigned long seed);
 
-	AbsProgramGenerator();
+	virtual ~ProgramGenerator();
 
-	virtual ~AbsProgramGenerator();
+	AbsOutputMgr* GetOutputMgr() { return output_mgr_; }
 
-	static OutputMgr* GetOutputMgr();
+	void GoGenerator();
 
-	virtual void goGenerator() = 0;
+	void Init();  
 
-	virtual OutputMgr* getOutputMgr() = 0;
+	static ProgramGenerator* CurrentGenerator();
 
-	virtual std::string get_count_prefix(const std::string &name) = 0;
-
-protected:
-	virtual void initialize() = 0;
+	static AbsOutputMgr* CurrentOutputMgr();
 
 private:
-	static AbsProgramGenerator *current_generator_;
+	int argc_;
 
-	static OutputMgr *getmgr(AbsProgramGenerator *gen);
+	char **argv_;
+
+	unsigned long seed_; 
+
+	AbsOutputMgr *output_mgr_;
 };
+
+
 
 #endif

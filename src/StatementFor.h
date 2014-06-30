@@ -66,16 +66,13 @@ public:
 	const StatementAssign* get_init(void) const { return &init;};
 	const Expression* get_test(void) const { return &test; };
 	const StatementAssign* get_incr(void) const { return &incr; };
-	const Block* get_body(void) const { return &body; };
-	void output_header(std::ostream& out, int indent) const;
+	const Block* get_body(void) const { return &body; }; 
 	//
 	virtual void get_blocks(std::vector<const Block*>& blks) const { blks.push_back(&body);}
 
 	virtual void get_exprs(std::vector<const Expression*>& exps) const {exps.push_back(&test);}
 
-	virtual bool visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const;
-
-	virtual void Output(std::ostream &out, FactMgr* fm, int indent = 0) const;
+	virtual bool visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const; 
 
 private:
 	// XXX --- `init' and `incr' have the "wrong types."  Should be exprs.

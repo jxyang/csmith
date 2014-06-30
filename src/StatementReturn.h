@@ -53,9 +53,7 @@ public:
 
 	StatementReturn(Block* b, const ExpressionVariable &v);
 	StatementReturn(const StatementReturn &sr);
-	virtual ~StatementReturn(void);
- 
-	virtual void Output(std::ostream &out, FactMgr* fm, int indent = 0) const;
+	virtual ~StatementReturn(void); 
 
 	virtual bool must_return(void) const {return true;}
 

@@ -56,7 +56,7 @@
 
 #include "Block.h" // temporary; don't want to depend on subclases!
 #include "StatementAssign.h" // temporary; don't want to depend on subclases!
-#include "StatementExpr.h" // temporary; don't want to depend on subclases!
+#include "StatementCall.h" // temporary; don't want to depend on subclases!
 #include "StatementFor.h" // temporary; don't want to depend on subclases!
 #include "StatementIf.h" // temporary; don't want to depend on subclases!
 #include "StatementReturn.h" // temporary; don't want to depend on subclases!
@@ -74,7 +74,7 @@
 #include "FactMgr.h"
 #include "CFGEdge.h"
  
-#include "OutputMgr.h"
+#include "AbsOutputMgr.h"
 #include "util.h"
 #include "StringUtils.h"
 #include "VariableSelector.h"
@@ -275,7 +275,7 @@ Statement::make_random(CGContext &cg_context,
 		s = StatementIf::make_random(cg_context);
 		break;
 	case eInvoke:
-		s = StatementExpr::make_random(cg_context);
+		s = StatementCall::make_random(cg_context);
 		break;
 	case eReturn:
 		s = StatementReturn::make_random(cg_context);
@@ -759,7 +759,7 @@ Statement::get_direct_invocation(void) const
 		}
 	}
 	else if (eType == eInvoke) {
-		return ((const StatementExpr*)this)->get_invoke();
+		return ((const StatementCall*)this)->get_invoke();
 	}
 	else if (eType == eIfElse) {
 		const StatementIf* si = (const StatementIf*)this;
@@ -896,14 +896,7 @@ Statement::post_creation_analysis(vector<const Fact*>& pre_facts, const Effect& 
 	if (cg_context.get_current_func()->name == "func_1" && !(cg_context.flags & IN_LOOP) ) {
 		if (has_uncertain_call_recursive()) { 
 			FactVec outputs = pre_facts;
-			cg_context.reset_effect_accum(pre_effect); 
-			//if (stm_id == 573)
-				/*if (this->eType == eAssign) {
-					((const StatementAssign*)this)->get_rhs()->indented_output(cout, 0);
-				}
-				cout << endl;
-				Output(cout, fm);*/
-			//}
+			cg_context.reset_effect_accum(pre_effect);  
 			if (!validate_and_update_facts(outputs, cg_context)) {
 				assert(0);
 			}
@@ -932,51 +925,4 @@ Statement::post_creation_analysis(vector<const Fact*>& pre_facts, const Effect& 
 	fm->map_accum_effect[this] = *(cg_context.get_effect_accum());
 	fm->map_visited[this] = true;
 }
-
-/*
- * return: 1 means this is a goto target, 0 otherwise
- */
-int 
-Statement::pre_output(std::ostream &out, FactMgr* /* fm */, int indent) const
-{
-	// output label if this is a goto target
-	vector<const StatementGoto*> gotos;
-	if (find_jump_sources(gotos)) {
-		assert(gotos.size() > 0);
-		out << gotos[0]->label << ":" << endl; 
-		return 1;
-		//for (j=0; j<gotos.size(); j++) {
-		//	gotos[j]->output_skipped_var_inits(out, indent);
-		//}
-	}
-	// compute checksum and output, for Yang's delta 
-	output_hash(out, indent);
-	return 0;
-}
-	
-void 
-Statement::post_output(std::ostream &out, FactMgr* fm, int indent) const
-{
-	// don't print facts after block because it would mess up "if ... else ..."
-	if (fm && CGOptions::paranoid() && !CGOptions::concise() && eType != eBlock) {
-		fm->output_assertions(out, this, indent, true);
-	}
-}
-
-void
-Statement::output_hash(std::ostream &out, int indent) const
-{
-	// compute checksum and print out the value
-	if (CGOptions::step_hash_by_stmt()) {
-		OutputMgr::OutputStepHashFuncInvocation(out, indent, stm_id);
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+ 

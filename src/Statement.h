@@ -103,9 +103,7 @@ public:
 
 	const FunctionInvocation* get_direct_invocation(void) const;
 
-	virtual bool visit_facts(vector<const Fact*>& /*inputs*/, CGContext& /*cg_context*/) const {return true;};
-
-	void output_hash(std::ostream &out, int indent) const;
+	virtual bool visit_facts(vector<const Fact*>& /*inputs*/, CGContext& /*cg_context*/) const {return true;}; 
 
 	bool stm_visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const;
 
@@ -164,13 +162,7 @@ public:
 	virtual std::vector<const ExpressionVariable*> get_dereferenced_ptrs(void) const; 
 		
 	void get_referenced_ptrs(std::vector<const Variable*>& ptrs) const; 
-	bool is_ptr_used(void) const;
-
-	virtual void Output(std::ostream &out, FactMgr* fm=0, int indent = 0) const = 0;
-	int pre_output(std::ostream &out, FactMgr* fm=0, int indent = 0) const;
-	void post_output(std::ostream &out, FactMgr* fm=0, int indent = 0) const;
-
-	void output_with_assert(std::ostream &out);
+	bool is_ptr_used(void) const; 
 
 	const eStatementType eType;
 

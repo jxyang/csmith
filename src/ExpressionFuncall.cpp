@@ -64,7 +64,7 @@ ExpressionFunctionProbability(const CGContext &/*cg_context*/)
  *
  */
 Expression *
-ExpressionFuncall::make_random(CGContext &cg_context, const Type* type, const CVQualifiers* qfer)
+ExpressionFuncall::make_random(CGContext &cg_context, const Type* type, const TypeQualifiers* qfer)
 {
 	Expression *e = 0; 
 	bool std_func = ExpressionFunctionProbability(cg_context);
@@ -199,7 +199,7 @@ ExpressionFuncall::has_uncertain_call_recursive(void) const
 /*
  * return the const/volatile qualifiers for function calls 
  */
-CVQualifiers 
+TypeQualifiers 
 ExpressionFuncall::get_qualifiers(void) const
 { 
 	return invoke.get_qualifiers();
@@ -232,29 +232,4 @@ ExpressionFuncall::compatible(const Variable *v) const
 bool ExpressionFuncall::compatible(const Expression * /*exp*/) const
 {
 	return false;
-}
-
-/*
- *
- */
-void
-ExpressionFuncall::Output(std::ostream &out) const
-{
-	output_cast(out); 
-	invoke.Output(out);
-}
-
-void 
-ExpressionFuncall::indented_output(std::ostream &out, int indent) const 
-{ 
-	invoke.indented_output(out, indent);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+} 

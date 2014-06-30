@@ -53,6 +53,7 @@
 #include "VectorFilter.h"
 
 #include "random.h"
+#include "AbsOutputMgr.h"
 
 using namespace std;
 
@@ -103,7 +104,7 @@ StatementAssign::AssignOpsProbability(const Type* type)
  *
  */
 StatementAssign *
-StatementAssign::make_random(CGContext &cg_context, const Type* type, const CVQualifiers* qf)
+StatementAssign::make_random(CGContext &cg_context, const Type* type, const TypeQualifiers* qf)
 {
 	// decide assignment operator
 	eAssignOps op = AssignOpsProbability(type);
@@ -124,7 +125,7 @@ StatementAssign::make_random(CGContext &cg_context, const Type* type, const CVQu
 	Effect running_eff_context(cg_context.get_effect_context());
 	Effect rhs_accum, lhs_accum;  
 	CGContext rhs_cg_context(cg_context, running_eff_context, &rhs_accum);
-	CVQualifiers qfer;
+	TypeQualifiers qfer;
 	if (qf) qfer = *qf;
 
 	if (need_no_rhs(op)) {
@@ -416,159 +417,6 @@ StatementAssign::~StatementAssign(void)
 	delete &expr;
 	if (op_flags)
 		delete op_flags;
-}
+}  
 
-/*
- * output assign operator
- */
-void
-StatementAssign::output_op(std::ostream &out) const
-{
-	switch (op) {
-	case eSimpleAssign: out << "="; break;
-	case eMulAssign:	out << "*="; break;
-	case eDivAssign:	out << "/="; break;
-	case eRemAssign:	out << "%="; break;
-	case eAddAssign:	out << "+="; break;
-	case eSubAssign:	out << "-="; break;
-	case eLShiftAssign:	out << "<<="; break;
-	case eRShiftAssign:	out << ">>="; break;
-	case eBitAndAssign:	out << "&="; break;
-	case eBitXorAssign:	out << "^="; break;
-	case eBitOrAssign:	out << "|="; break;
-
-	case ePreIncr:		out << "++"; break;
-	case ePreDecr:		out << "--"; break;
-	case ePostIncr:		out << "++"; break;
-	case ePostDecr:		out << "--"; break;
-	}
-}
-
-/*
- *
- */
-void
-StatementAssign::Output(std::ostream &out, FactMgr* /*fm*/, int indent) const
-{
-	output_tab(out, indent);
-	OutputAsExpr(out);
-	out << ";";
-	outputln(out);
-}
-
-void
-StatementAssign::OutputSimple(std::ostream &out) const
-{
-	switch (op) {
-	default:
-		lhs.Output(out);
-		out << " ";
-		output_op(out);
-		out << " ";
-		expr.Output(out);
-		break;
-		
-	case ePreIncr:
-	case ePreDecr:
-		output_op(out);
-		lhs.Output(out);
-		break;
-		
-	case ePostIncr:
-	case ePostDecr:
-		lhs.Output(out);
-		output_op(out);
-		break;
-	}
-}
-
-/*
- *
- */
-void
-StatementAssign::OutputAsExpr(std::ostream &out) const
-{
-	if (CGOptions::avoid_signed_overflow() && op_flags) {
-		switch (op) {
-
-		case eSimpleAssign:
-		case eBitAndAssign:
-		case eBitXorAssign:
-		case eBitOrAssign:
-		{
-			eBinaryOps bop = compound_to_binary_ops(op);
-			lhs.Output(out);
-			out << " "; 
-			output_op(out);
-			out << " ";
-			expr.Output(out); 
-			break;
-		}
-		
-		case ePreIncr:	
-			out << "++"; lhs.Output(out); 
-			break;
-		case ePreDecr:	
-			out << "--"; lhs.Output(out); 
-			break;
-		case ePostIncr:	
-			lhs.Output(out); out << "++"; 
-			break;
-		case ePostDecr:	lhs.Output(out); 
-			out << "--"; 
-			break;
-			
-		case eAddAssign:
-		case eSubAssign:
-			{
-				enum eBinaryOps bop = compound_to_binary_ops(op); 
-				assert(op_flags);
-				string fname = op_flags->to_string(bop);
-				int id = SafeOpFlags::to_id(fname); 
-				// don't use safe math wrapper if this function is specified in "--safe-math-wrapper"
-				if (!CGOptions::safe_math_wrapper(id)) {
-					OutputSimple(out);
-					return;
-				}
-				lhs.Output(out);
-				out << " = " << fname << "(";
-				if (CGOptions::math_notmp()) {
-					out << tmp_var1 << ", ";
-				}
-
-				lhs.Output(out);
-				out << ", ";
-				if (CGOptions::math_notmp()) {
-					out << tmp_var2 << ", ";
-				}
-
-				if (op == eAddAssign ||
-					op == eSubAssign) {
-					expr.Output(out);
-				} else {
-					out << (CGOptions::mark_mutable_const() ? "(1)" : "1");
-				}
-				if (CGOptions::identify_wrappers()) {
-					out << ", " << id;
-				}
-				out << ")";
-			}
-			break;
-
-		default:
-			assert(false);
-			break;
-		}
-	} else {
-		OutputSimple(out);
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+ 

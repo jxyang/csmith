@@ -44,7 +44,7 @@
 #include <ostream>
 #include <vector>
 #include "util.h"
-#include "CVQualifiers.h"
+#include "TypeQualifiers.h"
 using namespace std;
 
 class CGContext;
@@ -55,7 +55,7 @@ class Type;
 class Fact;
 class SafeOpFlags;
 class Variable;
-class CVQualifiers;
+class TypeQualifiers;
 
 enum eUnaryOps
 {
@@ -117,7 +117,7 @@ public:
 	static FunctionInvocation *make_random(bool,
 										   CGContext &cg_context,
                                            const Type* type,
-										   const CVQualifiers* qfer);
+										   const TypeQualifiers* qfer);
 	static FunctionInvocation *make_random(Function *target,
 										   CGContext &cg_context);
 
@@ -147,7 +147,7 @@ public:
 
 	bool has_simple_params(void) const;
 
-	CVQualifiers get_qualifiers(void) const;
+	TypeQualifiers get_qualifiers(void) const;
 
 	void add_operand(const Expression* e); 
 
@@ -159,13 +159,11 @@ public:
 
 	virtual bool is_0_or_1(void) const { return false;}
 
-	virtual bool equals(int /*num*/) const { return false;}
-
-	virtual void Output(std::ostream &) const = 0;
-
-	virtual void indented_output(std::ostream &out, int indent) const = 0;
+	virtual bool equals(int /*num*/) const { return false;}  
 
 	virtual bool safe_invocation() const = 0;
+
+	const SafeOpFlags * GetOpFlags(void) const { return op_flags;}
 
 	eInvocationType invoke_type;
 

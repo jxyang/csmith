@@ -41,8 +41,7 @@
 #include "Expression.h"
 #include "FactMgr.h"
 #include "Bookkeeper.h"
- 
-#include "util.h"
+#include "AbsOutputMgr.h"
 
 using namespace std;
 
@@ -73,8 +72,7 @@ StatementIf::make_random(CGContext &cg_context)
 			cg_context.curr_blk = cg_context.get_current_block(); 
 			bool ok = expr->visit_facts(pre_facts, cg_context);  
 			if (!ok) {
-			//	print_facts(pre_facts);
-			//	expr->indented_output(cout, 0);
+			//	print_facts(pre_facts); 
 			}
 			assert(ok);
 			fm->global_facts = pre_facts;
@@ -132,37 +130,7 @@ StatementIf::~StatementIf(void)
 	delete &test;
 	delete &if_true;
 	delete &if_false;
-}
-
-/*
- *
- */
-void
-StatementIf::Output(std::ostream &out, FactMgr* fm, int indent) const
-{
-	output_condition(out, fm, indent);
-	output_branches(out, fm, indent);
-}
-
-void 
-StatementIf::output_condition(std::ostream &out, FactMgr* /*fm*/, int indent) const
-{
-	output_tab(out, indent);
-	out << "if (";
-	test.Output(out);
-	out << ")";
-	outputln(out);
-}
-	
-void 
-StatementIf::output_branches(std::ostream &out, FactMgr* fm, int indent) const
-{
-	if_true.Output(out, fm, indent);
-	output_tab(out, indent);
-	out << "else";
-	outputln(out);
-	if_false.Output(out, fm, indent);
-}
+} 
 
 bool 
 StatementIf::visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const

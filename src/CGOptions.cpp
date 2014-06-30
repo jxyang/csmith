@@ -35,12 +35,12 @@
 #include <string.h>
 #include <map>
 #include "Fact.h"
-#include "DefaultOutputMgr.h"
+#include "DefaultCOutputMgr.h"
 #include "Bookkeeper.h"
 #include "CompatibleChecker.h"
 #include "PartialExpander.h" 
 #include "Probabilities.h"
-#include "OutputMgr.h"
+#include "AbsOutputMgr.h"
 #include "StringUtils.h"
 
 using namespace std; 
@@ -133,9 +133,7 @@ DEFINE_GETTER_SETTER_BOOL(divs)
 DEFINE_GETTER_SETTER_BOOL(muls)
 DEFINE_GETTER_SETTER_BOOL(accept_argc)
 DEFINE_GETTER_SETTER_BOOL(random_random)
-DEFINE_GETTER_SETTER_INT(stop_by_stmt) 
-DEFINE_GETTER_SETTER_BOOL(deputy) 
-DEFINE_GETTER_SETTER_BOOL(step_hash_by_stmt)
+DEFINE_GETTER_SETTER_INT(stop_by_stmt)  
 DEFINE_GETTER_SETTER_BOOL(compound_assignment)
 DEFINE_GETTER_SETTER_STRING_REF(dump_default_probabilities)
 DEFINE_GETTER_SETTER_STRING_REF(dump_random_probabilities)
@@ -228,9 +226,7 @@ CGOptions::set_default_settings(void)
 	divs(true);
 	muls(true);
 	accept_argc(true);
-	stop_by_stmt(-1);
-	deputy(false);
-	step_hash_by_stmt(false);
+	stop_by_stmt(-1); 
 	const_as_condition(false);
 	match_exact_qualifiers(false);
 	blind_check_global(false);
@@ -377,12 +373,6 @@ CGOptions::has_conflict(void)
 #endif
 
 	return false;
-}
-
-void
-CGOptions::monitored_funcs(std::string fnames)
-{
-	parse_string_options(fnames, OutputMgr::monitored_funcs_);
 }
 
 void 

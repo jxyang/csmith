@@ -47,7 +47,7 @@ class Lhs : public Expression
 {
 public:
 	// Factory method. 
-	static Lhs *make_random(CGContext &cg_context, const Type* t, const CVQualifiers* qfer, bool for_compound_assign, bool no_signed_overflow=false);
+	static Lhs *make_random(CGContext &cg_context, const Type* t, const TypeQualifiers* qfer, bool for_compound_assign, bool no_signed_overflow=false);
 
 	explicit Lhs(const Variable &v);
 
@@ -57,7 +57,7 @@ public:
 
 	virtual Expression *clone() const;
 
-	virtual CVQualifiers get_qualifiers(void) const;
+	virtual TypeQualifiers get_qualifiers(void) const;
 
 	virtual void get_eval_to_subexps(vector<const Expression*>& subs) const {subs.push_back(this);}
 
@@ -81,9 +81,7 @@ public:
 
 	virtual bool visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const;
 
-	virtual const Type &get_type(void) const;
-
-	virtual void Output(std::ostream &) const;
+	virtual const Type &get_type(void) const; 
 
 private:
 	explicit Lhs(const Lhs &lhs);

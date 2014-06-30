@@ -53,10 +53,10 @@
 #include "Bookkeeper.h"
 #include "Filter.h"
 
-#include "CVQualifiers.h"
+#include "TypeQualifiers.h"
 #include "VariableSelector.h"
 #include "SafeOpFlags.h"
-#include "OutputMgr.h"
+#include "AbsOutputMgr.h"
 #include "StringUtils.h"
 
 using namespace std;  
@@ -124,7 +124,7 @@ static const Variable* find_expr_key_var(const Expression* e)
 
 //=======================================================================================
 ArrayVariable *
-ArrayVariable::CreateArrayVariable(const CGContext& cg_context, Block* blk, const std::string &name, const Type *type, const Expression* init, const CVQualifiers* qfer, const Variable* isFieldVarOf)
+ArrayVariable::CreateArrayVariable(const CGContext& cg_context, Block* blk, const std::string &name, const Type *type, const Expression* init, const TypeQualifiers* qfer, const Variable* isFieldVarOf)
 {
 	assert(type);
 	if (type->eType == eSimple)
@@ -155,7 +155,7 @@ ArrayVariable::CreateArrayVariable(const CGContext& cg_context, Block* blk, cons
 		}
 	}
 	ArrayVariable *var = new ArrayVariable(blk, name, type, init, qfer, sizes, isFieldVarOf); 
-	if (type->is_aggregate()) {
+	if (type->IsAggregate()) {
 		var->create_field_vars(type);
 	}
 	// create a list of alternative initial values
@@ -188,7 +188,7 @@ ArrayVariable::CreateArrayVariable(const CGContext& cg_context, Block* blk, cons
 /*
  *
  */
-ArrayVariable::ArrayVariable(Block* blk, const std::string &name, const Type *type, const Expression* init, const CVQualifiers* qfer, const vector<unsigned int>& sizes, const Variable* isFieldVarOf)
+ArrayVariable::ArrayVariable(Block* blk, const std::string &name, const Type *type, const Expression* init, const TypeQualifiers* qfer, const vector<unsigned int>& sizes, const Variable* isFieldVarOf)
 	: Variable(name, type, init, qfer, isFieldVarOf, true),  
 	  collective(NULL),
 	  parent(blk),
@@ -269,7 +269,7 @@ ArrayVariable::itemize(void) const
 	}
 	av->collective = this; 
 	// only expand struct/union for itemized array variable
-	if (type->is_aggregate()) {
+	if (type->IsAggregate()) {
 		av->create_field_vars(type);
 	}
 	return av;
@@ -289,7 +289,7 @@ ArrayVariable::itemize(const vector<int>& const_indices) const
 	}
 	av->collective = this; 
 	// only expand struct/union for itemized array variable
-	if (type->is_aggregate()) {
+	if (type->IsAggregate()) {
 		av->create_field_vars(type);
 	}
 	return av;
@@ -308,10 +308,12 @@ ArrayVariable::itemize(const std::vector<const Variable*>& indices, Block* blk) 
 	av->collective = this;
 	av->parent = blk;
 	// only expand struct/union for itemized array variable
-	if (type->is_aggregate()) {
+	if (type->IsAggregate()) {
 		av->create_field_vars(type);
 	}
-	blk->local_vars.push_back(av);
+
+	if (blk)
+		blk->local_vars.push_back(av);
 	return av;
 }
 
@@ -328,7 +330,7 @@ ArrayVariable::itemize(const std::vector<const Expression*>& indices, Block* blk
 	av->collective = this;
 	av->parent = blk;
 	// only expand struct/union for itemized array variable
-	if (type->is_aggregate()) {
+	if (type->IsAggregate()) {
 		av->create_field_vars(type);
 	}
 	blk->local_vars.push_back(av);
@@ -438,155 +440,10 @@ ArrayVariable::is_visible_local(const Block* blk) const
 
 bool
 ArrayVariable::no_loop_initializer(void) const
-{
-	// don't use loop initializer if we are outputing deputy annotations
-	if (CGOptions::deputy()) return true; 
-
+{ 
 	// can not use loop initializer if either array member are structs, or they are constants, or it has > 1 initial values
 	return type->eType==eStruct || type->eType==eUnion || is_const() || is_global() || (init_values.size() > 0);
-}
-
-// print the initializer recursively for multi-dimension arrays
-// this is based on John's idea
-string 
-ArrayVariable::build_init_recursive(size_t dimen, const vector<string>& init_strings) const
-{
-	assert (dimen < get_dimension());
-	static unsigned seed = 0xABCDEF; 
-	string ret = "{";
-	for (size_t i=0; i<sizes[dimen]; i++) {
-		if (dimen == sizes.size() - 1) {
-			// use magic number to choose an initial value 
-			size_t rnd_index = ((seed * seed + (i+7) * (i+13)) * 52369) % (init_strings.size()); 
-			ret += init_strings[rnd_index];
-			seed++;
-		 } else {
-			ret += build_init_recursive(dimen + 1, init_strings);
-		 }
-		 if (i != sizes[dimen]-1) ret += ",";
-	}
-	ret += "}";
-	return ret;
-}
-
-// build the string initializer in form of "{...}"
-string
-ArrayVariable::build_initializer_str(const vector<string>& init_strings) const
-{ 
-	string str, str_dimen;
-	if (CGOptions::force_non_uniform_array_init()) {
-		return build_init_recursive(0, init_strings);
-	}
-		
-	for (int i=sizes.size()-1; i>=0; i--) {
-		size_t len = sizes[i];
-		str_dimen = "{";
-		for (size_t j=0; j<len; j++) {
-			// for last dimension, use magic number to choose an initial value
-			if (i == ((int)sizes.size()) - 1) {
-				unsigned int rnd_index = ((i + (j+7) * (j+13)) * 52369) % (init_strings.size());  
-				str_dimen += init_strings[rnd_index];
-			} else {
-				str_dimen += str;
-			} 
-			str_dimen += ((j<len-1) ? ", " : "");
-		}
-		str_dimen += "}";
-		str = str_dimen;
-	}
-	return str;
-}
-
-// --------------------------------------------------------------
-void
-ArrayVariable::OutputDef(std::ostream &out, int indent) const
-{
-	if (collective == 0) { 
-		output_tab(out, indent);
-		if (!no_loop_initializer() ) {
-			// don't print definition for array, rather use a loop initializer 
-			OutputDecl(out);
-			out << ";";
-			outputln(out);
-		}
-		else {
-			// use string initializer for arrays
-			// create the strings for initial values
-			size_t i;
-			vector<string> init_strings;
-			assert(init);
-			init_strings.push_back(init->to_string());
-			for (i=0; i<init_values.size(); i++) {
-				init_strings.push_back(init_values[i]->to_string());
-			}
-			
-			// force global variables to be static if necessary
-			if (CGOptions::force_globals_static() && is_global()) {
-				out << "static ";
-			}
-			
-			// print type, name, and dimensions
-			output_qualified_type(out);
-			out << get_actual_name();
-			for (i=0; i<sizes.size(); i++) {
-				out << "[" << sizes[i] << "]";
-			}
-			out << " = " << build_initializer_str(init_strings) << ";";
-			outputln(out);
-		}
-	}
-}
-
-void ArrayVariable::OutputDecl(std::ostream &out) const
-{	
-	// force global variables to be static if necessary
-	if (CGOptions::force_globals_static() && is_global()) {
-		out << "static ";
-	}
-	output_qualified_type(out);
-	out << get_actual_name();
-	size_t i;
-	for (i=0; i<sizes.size(); i++) {
-		out << "[" << sizes[i] << "]";
-	}
-}
-
-// --------------------------------------------------------------
-void
-ArrayVariable::Output(std::ostream &out) const
-{
-	if (collective == 0) {
-		out << get_actual_name();
-	}
-	// for itemized array variables, output the modularized index 
-	else {
-		out << get_actual_name();
-		assert(!indices.empty());
-		size_t i;
-		for (i=0; i<indices.size(); i++) {
-			if (1) { //indices[i]->less_than(sizes[i])) {
-				out << "[";
-				indices[i]->Output(out);
-				out << "]";
-			}
-			else {
-				out << "[";
-				const Type* t = &(indices[i]->get_type());
-				// cast signed variable to it's corresponding unsigned type, just in case we get a negative index
-				if (t->is_signed()) {
-					const Type* unsigned_type = t->to_unsigned();
-					assert(unsigned_type);
-					out << "(";
-					unsigned_type->Output(out);
-					out << ")";
-				} 
-				out << "(";
-				indices[i]->Output(out);
-				out << ") % " << sizes[i] << "]";
-			}
-		}
-	}
-}
+} 
 
 void
 ArrayVariable::OutputUpperBound(std::ostream &out) const
@@ -607,243 +464,4 @@ ArrayVariable::OutputLowerBound(std::ostream &out) const
 	for (i=0; i<get_dimension(); i++) {
 		out << "[0]";
 	}
-}
-
-// --------------------------------------------------------------
-void
-ArrayVariable::output_with_indices(std::ostream &out, const std::vector<const Variable*>& cvs) const
-{
-	size_t i;
-	out << get_actual_name();
-	for (i=0; i<get_dimension(); i++) {
-		out << "[";
-		cvs[i]->Output(out);
-		out << "]";
-	}
-}
-
-void
-ArrayVariable::output_checksum_with_indices(std::ostream &out, 
-					const std::vector<const Variable*>& cvs,
-					string field_name) const
-{
-	out << "printf(\"...checksum after hashing ";
-
-	size_t i;
-	out << get_actual_name();
-	for (i=0; i<get_dimension(); i++) {
-		out << "[%d]";
-	}
-	out << field_name;
-
-	out << " : %X\\n\"";
-	for (i=0; i<get_dimension(); i++) {
-		out << " ,";
-		cvs[i]->Output(out);
-	}
-
-	out <<", crc32_context ^ 0xFFFFFFFFUL);";
-}
-
-// --------------------------------------------------------------
-void
-ArrayVariable::output_init(std::ostream &out, const Expression* init, const vector<const Variable*>& cvs, int indent) const
-{
-	if (collective != 0) return; 
-	size_t i;
-
-	for (i=0; i<get_dimension(); i++) {
-		if (i > 0) {
-			output_tab(out, indent);
-			out << "{";
-			outputln(out);
-			indent++;
-		}
-		output_tab(out, indent);
-		out << "for (";
-		out << cvs[i]->get_actual_name(); 
-		out << " = 0; ";
-		out << cvs[i]->get_actual_name();
-		out << " < " << sizes[i] << "; "; 
-		out << cvs[i]->get_actual_name();
-		if (CGOptions::post_incr_operator()) {
-			out << "++)"; 
-		}
-		else {
-			out << " = " << cvs[i]->get_actual_name() << " + 1)"; 
-		}
-		outputln(out); 
-	}  
-	output_tab(out, indent+1);
-	output_with_indices(out, cvs);
-	out << " = ";
-	init->Output(out);
-	out << ";";
-	outputln(out); 
-	// output the closing bracelets
-	for (i=1; i<get_dimension(); i++) {
-		indent--;
-		output_tab(out, indent);
-		out << "}";
-		outputln(out);
-	}
-}
-
-// --------------------------------------------------------------
-void
-ArrayVariable::output_addr_checks(std::ostream &out, const Variable* var, string field_name, int indent) const
-{
-	size_t i;
-	vector<const Variable *> &ctrl_vars = Variable::get_new_ctrl_vars();
-	// declare control variables
-	OutputArrayCtrlVars(ctrl_vars, out, get_dimension(), indent);
-	for (i=0; i<get_dimension(); i++) {
-		output_tab(out, indent);
-		out << "for (";
-		out << ctrl_vars[i]->get_actual_name(); 
-		out << " = 0; ";
-		out << ctrl_vars[i]->get_actual_name();
-		out << " < " << sizes[i] << "; "; 
-		out << ctrl_vars[i]->get_actual_name();
-		if (CGOptions::post_incr_operator()) {
-			out << "++)"; 
-		}
-		else {
-			out << " = " << ctrl_vars[i]->get_actual_name() << " + 1)"; 
-		}
-		outputln(out); 
-		output_open_encloser("{", out, indent);
-	}  
-	output_tab(out, indent);
-	out << "if (";
-	var->Output(out);
-	out << " == &";
-	output_with_indices(out, ctrl_vars);
-	out << field_name;
-	out << ")" << endl;
-	output_open_encloser("{", out, indent);
-	output_tab(out, indent);
-	out << "printf(\"   ";
-	var->Output(out);
-	out << " = &";
-	out << get_actual_name();
-	for (i=0; i<get_dimension(); i++) {
-		out << "[%d]"; 
-	}
-	out << ";\\n\"";
-	for (i=0; i<get_dimension(); i++) {
-		out << ", ";
-		out << ctrl_vars[i]->get_actual_name();
-	}
-	out << ");" << endl;
-	output_tab(out, indent);
-	out << "break;"; 
-	output_close_encloser("}", out, indent); 
-	// output the closing bracelets
-	for (i=0; i<get_dimension(); i++) {
-		output_close_encloser("}", out, indent);
-	}
-}
-
-string
-ArrayVariable::make_print_index_str(const vector<const Variable *> &cvs) const
-{
-	size_t i;
-	string str = "printf(\"index = ";
-	for (i=0; i<get_dimension(); i++) {
-		str += "[%d]";
-	}
-	str += "\\n\", ";
-	for (i=0; i<get_dimension(); i++) {
-		if (i) {
-			str += ", ";
-		}
-		str += cvs[i]->get_actual_name();
-	}
-	str += ");";
-	return str;
-}
-
-/* -------------------------------------------------------------
- *  hash all array items
- ***************************************************************/
-void 
-ArrayVariable::hash(std::ostream& out) const
-{ 
-	if (collective != 0) return; 
-	vector<string> field_names;
-	// for unions, find the fields that we don't want to hash due to union field read rules. So FactUnion.cpp
-	vector<int> excluded_fields;
-	if (type->eType == eUnion) {
-		FactMgr* fm = get_fact_mgr_for_func(GetFirstFunction()); 
-		assert(fm);
-		for (size_t i=0; i<field_vars.size(); i++) {
-			if (!FactUnion::is_field_readable(this, i, fm->global_facts)) {
-				excluded_fields.push_back(i);
-			}
-		}
-	}
- 	type->get_int_subfield_names("", field_names, excluded_fields);
-	// if not a suitable type for hashing, give up
-	if (field_names.size() == 0) return;
-
-	size_t i, j;
-	int indent = 1;
-	//ISSUE: ugly hack to make sure we use the latest ctrl_vars, which is generated
-	// from the call of OutputArrayInitializers in OutputMgr.cpp
-	const vector<const Variable*>& cvs = Variable::get_last_ctrl_vars();
-	for (i=0; i<get_dimension(); i++) {
-		output_tab(out, indent);
-		out << "for (";
-		out << cvs[i]->get_actual_name(); 
-		out << " = 0; ";
-		out << cvs[i]->get_actual_name();
-		out << " < " << sizes[i] << "; "; 
-		out << cvs[i]->get_actual_name();
-		if (CGOptions::post_incr_operator()) {
-			out << "++)"; 
-		}
-		else {
-			out << " = " << cvs[i]->get_actual_name() << " + 1)"; 
-		}
-		outputln(out); 
-		output_open_encloser("{", out, indent);
-	}  
-	string vname;
-	ostringstream oss;
-	output_with_indices(oss, cvs);
-	vname = oss.str();
-	if (CGOptions::compute_hash()) {
-		for (j=0; j<field_names.size(); j++) {
-			output_tab(out, indent);
-			out << "transparent_crc(" << vname << field_names[j] << ", \"" << vname << field_names[j] << "\", print_hash_value);" << endl;
-		}
-		// print the index value
-		if (CGOptions::hash_value_printf()) {
-			output_tab(out, indent);
-			out << "if (print_hash_value) " << make_print_index_str(cvs) << endl;
-		}
-	}
-	else {
-		if (type->eType == eSimple) {
-			output_tab(out, indent);
-			out << Variable::sink_var_name << " = ";
-			output_with_indices(out, cvs);
-			out << ";";
-		}
-	}
-	// output the closing bracelets
-	for (i=0; i<get_dimension(); i++) {
-		output_close_encloser("}", out, indent);
-	}
-	outputln(out);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+} 

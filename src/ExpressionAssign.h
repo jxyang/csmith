@@ -46,14 +46,14 @@ class ExpressionAssign : public Expression
 {
 public:
 	// Factory method.
-	static Expression *make_random(CGContext &cg_context, const Type* type, const CVQualifiers* qfer=0);  
+	static Expression *make_random(CGContext &cg_context, const Type* type, const TypeQualifiers* qfer=0);  
 
 	ExpressionAssign(const StatementAssign* sa);
 	virtual ~ExpressionAssign(void);  
 
 	virtual Expression *clone() const;
 
-	virtual CVQualifiers get_qualifiers(void) const;  
+	virtual TypeQualifiers get_qualifiers(void) const;  
 
 	virtual void get_eval_to_subexps(vector<const Expression*>& subs) const;
 
@@ -76,9 +76,7 @@ public:
 
 	const Expression* get_rhs(void) const { return assign->get_expr();}
 	const Lhs* get_lhs(void) const { return assign->get_lhs();}
-	const StatementAssign* get_stm_assign(void) const { return assign;}
-	void Output(std::ostream &) const;
-	virtual void indented_output(std::ostream &out, int indent) const;
+	const StatementAssign* get_stm_assign(void) const { return assign;}  
 
 private:
 	const StatementAssign* assign;

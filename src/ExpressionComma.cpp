@@ -36,6 +36,7 @@
 #include "Bookkeeper.h"
 #include "StringUtils.h"
 #include "Block.h"
+#include "AbsOutputMgr.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +55,7 @@ cast_if_needed(Expression* exp)
 }
 
 ExpressionComma*
-ExpressionComma::make_random(CGContext &cg_context, const Type* type, const CVQualifiers* qfer)
+ExpressionComma::make_random(CGContext &cg_context, const Type* type, const TypeQualifiers* qfer)
 {
 	Expression* lhs = Expression::make_random(cg_context, NULL, NULL, false, true);
 	Expression* rhs = Expression::make_random(cg_context, type, qfer, false, false);
@@ -112,31 +113,4 @@ ExpressionComma::get_eval_to_subexps(vector<const Expression*>& subs) const
 	vector<const Expression*> exps;
 	get_rhs()->get_eval_to_subexps(exps);
 	subs.insert(subs.end(), exps.begin(), exps.end());
-}
-
-void
-ExpressionComma::Output(std::ostream &out) const
-{
-	output_cast(out); 
-	out << "(";
-	lhs.Output(out);
-	out << " , ";
-	rhs.Output(out);
-	out << ")";
-}
-
-void 
-ExpressionComma::indented_output(std::ostream &out, int indent) const 
-{ 
-	output_tab(out, indent);
-	Output(out);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+} 

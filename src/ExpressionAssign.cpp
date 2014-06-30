@@ -38,6 +38,7 @@
 #include "Variable.h"
 #include "StringUtils.h"
 #include "Block.h"
+#include "AbsOutputMgr.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -45,11 +46,11 @@
  *
  */
 Expression *
-ExpressionAssign::make_random(CGContext &cg_context, const Type* type, const CVQualifiers* qfer)
+ExpressionAssign::make_random(CGContext &cg_context, const Type* type, const TypeQualifiers* qfer)
 { 
-	CVQualifiers qf;
+	TypeQualifiers qf;
 	if (qfer == NULL) {
-		qf = CVQualifiers::random_qualifiers(type, Effect::WRITE, cg_context, true);
+		qf = TypeQualifiers::random_qualifiers(type, Effect::WRITE, cg_context, true);
 		qfer = &qf;
 	}
 	StatementAssign* sa = StatementAssign::make_random(cg_context, type, qfer);
@@ -82,7 +83,7 @@ ExpressionAssign::clone() const
 	return new ExpressionAssign(assign);
 }
 
-CVQualifiers 
+TypeQualifiers 
 ExpressionAssign::get_qualifiers(void) const
 { 
 	return assign->get_lhs()->get_qualifiers();
@@ -124,29 +125,4 @@ bool
 ExpressionAssign::visit_facts(vector<const Fact*>& inputs, CGContext& cg_context) const 
 {
 	return assign->visit_facts(inputs, cg_context);
-}
-
-void
-ExpressionAssign::Output(std::ostream &out) const
-{
-	output_cast(out); 
-	out << "(";
-	assign->OutputAsExpr(out);
-	out << ")";
-}
-
-void 
-ExpressionAssign::indented_output(std::ostream &out, int indent) const 
-{ 
-	output_tab(out, indent);
-	Output(out);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Local Variables:
-// c-basic-offset: 4
-// tab-width: 4
-// End:
-
-// End of file.
+}  

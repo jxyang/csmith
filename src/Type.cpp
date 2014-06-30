@@ -45,10 +45,11 @@
 #include "random.h"
 #include "Filter.h"
 
-#include "util.h"
+#include "AbsOutputMgr.h"
 #include "Bookkeeper.h"
 #include "Probabilities.h" 
 #include "Enumerator.h"
+#include "AbsOutputMgr.h"
 
 using namespace std;
 
@@ -158,7 +159,7 @@ NonVoidNonVolatileTypeFilter::filter(int v) const
 	if (type->eType == eSimple && type->simple_type == eVoid)
 		return true;
 
-	if (type->is_aggregate() && type->is_volatile_struct_union())
+	if (type->IsAggregate() && type->is_volatile_struct_union())
 		return true;
 
 	if ((type->eType == eStruct) && (!CGOptions::arg_structs())) {
@@ -281,7 +282,7 @@ Type::Type(const Type &t) :
  /* constructor for struct or union types
   *******************************************************/
 Type::Type(vector<const Type*>& struct_fields, bool isStruct, bool packed, 
-			vector<CVQualifiers> &qfers, vector<int> &fields_length) :
+			vector<TypeQualifiers> &qfers, vector<int> &fields_length) :
     ptr_type(0),
     fields(struct_fields),
     used(false),
@@ -449,7 +450,7 @@ Type::find_pointer_type(const Type* t, bool add)
 bool
 Type::is_const_struct_union() const
 {
-	if (!is_aggregate()) return false;
+	if (!IsAggregate()) return false;
 	assert(fields.size() == qfers_.size());
 
 	for (size_t i = 0; i < fields.size(); ++i) {
@@ -457,7 +458,7 @@ Type::is_const_struct_union() const
 		if (field->is_const_struct_union()) {
 			return true;
 		}
-		const CVQualifiers& cf = qfers_[i]; 
+		const TypeQualifiers& cf = qfers_[i]; 
 		if (cf.is_const()) return true;
 	}
 	return false; 
@@ -466,7 +467,7 @@ Type::is_const_struct_union() const
 bool
 Type::is_volatile_struct_union() const
 {
-	if (!is_aggregate()) return false;
+	if (!IsAggregate()) return false;
 	assert(fields.size() == qfers_.size());
 
 	for (size_t i = 0; i < fields.size(); ++i) {
@@ -474,7 +475,7 @@ Type::is_volatile_struct_union() const
 		if (field->is_volatile_struct_union()) {
 			return true;
 		}
-		const CVQualifiers& cf = qfers_[i]; 
+		const TypeQualifiers& cf = qfers_[i]; 
 		if (cf.is_volatile()) 
 			return true;
 	}
@@ -614,7 +615,7 @@ Type::choose_random_nonvoid_simple(void)
 }
 
 void
-Type::make_one_bitfield(vector<const Type*> &random_fields, vector<CVQualifiers> &qualifiers, 
+Type::make_one_bitfield(vector<const Type*> &random_fields, vector<TypeQualifiers> &qualifiers, 
 			vector<int> &fields_length)
 {
 	int max_length = CGOptions::int_size() * 8;
@@ -623,7 +624,7 @@ Type::make_one_bitfield(vector<const Type*> &random_fields, vector<CVQualifiers>
 
 	const Type *type = sign ? &Type::get_simple_type(eInt) : &Type::get_simple_type(eUInt);
 	random_fields.push_back(type);
-	CVQualifiers qual = CVQualifiers::random_qualifiers(type, FieldConstProb, FieldVolatileProb);
+	TypeQualifiers qual = TypeQualifiers::random_qualifiers(type, FieldConstProb, FieldVolatileProb);
 	
 	qualifiers.push_back(qual);
 	int length = rnd_upto(max_length); 
@@ -642,7 +643,7 @@ Type::make_one_bitfield(vector<const Type*> &random_fields, vector<CVQualifiers>
 // ---------------------------------------------------------------------
 void
 Type::make_full_bitfields_struct_fields(size_t field_cnt, vector<const Type*> &random_fields, 
-					vector<CVQualifiers> &qualifiers,
+					vector<TypeQualifiers> &qualifiers,
 					vector<int> &fields_length)
 {
 	for (size_t i=0; i<field_cnt; i++) {
@@ -658,7 +659,7 @@ Type::make_full_bitfields_struct_fields(size_t field_cnt, vector<const Type*> &r
 
 void
 Type::make_one_struct_field(vector<const Type*> &random_fields, 
-					vector<CVQualifiers> &qualifiers,
+					vector<TypeQualifiers> &qualifiers,
 					vector<int> &fields_length)
 {
 	ChooseRandomTypeFilter f(/*for_field_var*/true);
@@ -666,14 +667,14 @@ Type::make_one_struct_field(vector<const Type*> &random_fields,
 	
 	const Type* type = AllTypes[i];
 	random_fields.push_back(type);
-	CVQualifiers qual = CVQualifiers::random_qualifiers(type, FieldConstProb, FieldVolatileProb);
+	TypeQualifiers qual = TypeQualifiers::random_qualifiers(type, FieldConstProb, FieldVolatileProb);
 	
 	qualifiers.push_back(qual);
 	fields_length.push_back(-1);
 }
 
 void
-Type::make_one_union_field(vector<const Type*> &fields, vector<CVQualifiers> &qfers, vector<int> &lens)
+Type::make_one_union_field(vector<const Type*> &fields, vector<TypeQualifiers> &qfers, vector<int> &lens)
 {
 	bool is_bitfield = CGOptions::bitfields() && rnd_flipcoin(BitFieldInNormalStructProb);
 	if (is_bitfield) {
@@ -721,7 +722,7 @@ Type::make_one_union_field(vector<const Type*> &fields, vector<CVQualifiers> &qf
 		} while (type == NULL); 
 	
 		fields.push_back(type);
-		CVQualifiers qual = CVQualifiers::random_qualifiers(type, FieldConstProb, FieldVolatileProb);
+		TypeQualifiers qual = TypeQualifiers::random_qualifiers(type, FieldConstProb, FieldVolatileProb);
 		
 		qfers.push_back(qual);
 		lens.push_back(-1);
@@ -730,7 +731,7 @@ Type::make_one_union_field(vector<const Type*> &fields, vector<CVQualifiers> &qf
 
 void
 Type::make_normal_struct_fields(size_t field_cnt, vector<const Type*> &random_fields, 
-					vector<CVQualifiers> &qualifiers,
+					vector<TypeQualifiers> &qualifiers,
 					vector<int> &fields_length)
 {
 	for (size_t i=0; i<field_cnt; i++)
@@ -825,9 +826,9 @@ Type::get_bitfield_length(int length_flag)
 
 bool
 Type::make_one_bitfield_by_enum(Enumerator<string> &enumerator,
-				vector<CVQualifiers> &all_bitfield_quals,
+				vector<TypeQualifiers> &all_bitfield_quals,
 				vector<const Type*> &random_fields,
-				vector<CVQualifiers> &qualifiers,
+				vector<TypeQualifiers> &qualifiers,
 				vector<int> &fields_length,
 				int index, bool &last_is_zero)
 {
@@ -846,7 +847,7 @@ Type::make_one_bitfield_by_enum(Enumerator<string> &enumerator,
        	random_fields.push_back(type);
 	int qual_index = enumerator.get_elem(ss2.str());
 	assert((qual_index >= 0) && ((static_cast<unsigned int>(qual_index)) < all_bitfield_quals.size()));
-	CVQualifiers qual = all_bitfield_quals[qual_index];
+	TypeQualifiers qual = all_bitfield_quals[qual_index];
 	qualifiers.push_back(qual);
 
 	int length_flag = enumerator.get_elem(ss3.str());
@@ -862,8 +863,8 @@ Type::make_one_bitfield_by_enum(Enumerator<string> &enumerator,
 
 bool 
 Type::make_one_normal_field_by_enum(Enumerator<string> &enumerator, vector<const Type*> &all_types,
-				vector<CVQualifiers> &all_quals, vector<const Type*> &fields,
-				vector<CVQualifiers> &quals, vector<int> &fields_length, int i)
+				vector<TypeQualifiers> &all_quals, vector<const Type*> &fields,
+				vector<TypeQualifiers> &quals, vector<int> &fields_length, int i)
 {
 	int types_size = all_types.size();
 	int quals_size = all_quals.size();
@@ -886,7 +887,7 @@ Type::make_one_normal_field_by_enum(Enumerator<string> &enumerator, vector<const
 	ss2 << "qualifier" << i;
 	int qual_index = enumerator.get_elem(ss2.str());
 	assert(qual_index >= 0 && qual_index < quals_size);
-	CVQualifiers qual = all_quals[qual_index];
+	TypeQualifiers qual = all_quals[qual_index];
 	quals.push_back(qual);
 
 	fields_length.push_back(-1);
@@ -895,8 +896,8 @@ Type::make_one_normal_field_by_enum(Enumerator<string> &enumerator, vector<const
 
 void
 Type::make_all_struct_types_(Enumerator<string> &bitfields_enumerator, vector<const Type*> &accum_types,
-				vector<const Type*> &all_types, vector<CVQualifiers> &all_quals, 
-				vector<CVQualifiers> &all_bitfield_quals)
+				vector<const Type*> &all_types, vector<TypeQualifiers> &all_quals, 
+				vector<TypeQualifiers> &all_bitfield_quals)
 {
 	Enumerator<string> fields_enumerator;
 	init_fields_enumerator(fields_enumerator, bitfields_enumerator, all_types.size(), 
@@ -911,11 +912,11 @@ Type::make_all_struct_types_(Enumerator<string> &bitfields_enumerator, vector<co
 void
 Type::make_all_struct_types_with_bitfields(Enumerator<string> &enumerator, 
 				Enumerator<string> &bitfields_enumerator, vector<const Type*> &accum_types,
-				vector<const Type*> &all_types, vector<CVQualifiers> &all_quals, 
-				vector<CVQualifiers> &all_bitfield_quals)
+				vector<const Type*> &all_types, vector<TypeQualifiers> &all_quals, 
+				vector<TypeQualifiers> &all_bitfield_quals)
 {
 	vector<const Type*> fields;
-	vector<CVQualifiers> quals;
+	vector<TypeQualifiers> quals;
 	vector<int> fields_length;
 	int field_cnt = CGOptions::max_struct_fields();
     	bool last_is_zero = false;
@@ -994,11 +995,11 @@ Type::make_all_struct_types(int level, vector<const Type*> &accum_types)
 	copy_all_fields_types(all_types, accum_types);
 	reset_accum_types(accum_types);
 
-	vector<CVQualifiers> all_quals;
-	CVQualifiers::get_all_qualifiers(all_quals, RegularConstProb, RegularVolatileProb);
+	vector<TypeQualifiers> all_quals;
+	TypeQualifiers::get_all_qualifiers(all_quals, RegularConstProb, RegularVolatileProb);
 
-	vector<CVQualifiers> all_bitfield_quals;
-	CVQualifiers::get_all_qualifiers(all_bitfield_quals, FieldConstProb, FieldVolatileProb);
+	vector<TypeQualifiers> all_bitfield_quals;
+	TypeQualifiers::get_all_qualifiers(all_bitfield_quals, FieldConstProb, FieldVolatileProb);
 
 	Enumerator<string> fields_enumerator;
 	init_is_bitfield_enumerator(fields_enumerator, ExhaustiveBitFieldsProb);
@@ -1021,7 +1022,7 @@ Type::has_aggregate_field(const vector<const Type *> &fields)
 {
   for (vector<const Type *>::const_iterator iter = fields.begin(),
        iter_end = fields.end(); iter != iter_end; ++iter) {
-    if ((*iter)->is_aggregate())
+    if ((*iter)->IsAggregate())
         return true;
   }
   return false;
@@ -1049,7 +1050,7 @@ Type::make_random_struct_type(void)
         field_cnt = rnd_upto(max_cnt) + 1;
     
     vector<const Type*> random_fields;
-    vector<CVQualifiers> qualifiers;
+    vector<TypeQualifiers> qualifiers;
     vector<int> fields_length;
     bool is_bitfields = CGOptions::bitfields() && rnd_flipcoin(BitFieldsCreationProb);
     
@@ -1078,7 +1079,7 @@ Type::make_random_union_type(void)
     
 
     vector<const Type*> fields;
-    vector<CVQualifiers> qfers;
+    vector<TypeQualifiers> qfers;
     vector<int> lens;
     
 	for (size_t i=0; i<field_cnt; i++) {
@@ -1346,6 +1347,12 @@ Type::get_base_type(void) const
 	return tmp;
 }
 
+const vector<Type *>& 
+Type::GetAllTypes()
+{
+	return AllTypes;
+}
+
 bool
 Type::is_promotable(const Type* t) const
 {
@@ -1561,7 +1568,7 @@ Type::get_int_subfield_names(string prefix, vector<string>& names, const vector<
 	if (eType == eSimple) {
 		names.push_back(prefix);
 	}
-	else if (is_aggregate()) {
+	else if (IsAggregate()) {
 		size_t i;
 		size_t j = 0;
 		for (i=0; i<fields.size(); i++) {
@@ -1591,122 +1598,7 @@ Type::contain_pointer_field(void) const
 		}
 	}
 	return false;
-}
-
-// ---------------------------------------------------------------------
-void
-Type::Output(std::ostream &out) const
-{
-	switch (eType) {
-	case eSimple:
-		if (this->simple_type == eVoid) {
-			out << "void";
-		} else {
-			out << (is_signed() ? "int" : "uint");
-			out << (SizeInBytes() * 8);
-			out << "_t";
-		} 
-		break;
-    case ePointer:   ptr_type->Output( out ); out << "*"; break;
-    case eUnion:     out << "union U" << sid; break;
-    case eStruct:    out << "struct S" << sid; break;
-	}
-}
-
-void
-Type::get_type_sizeof_string(std::string &s) const
-{
-	ostringstream ss;
-	ss << "sizeof(";
-	Output(ss);
-	ss << ")";
-	s = ss.str();
-}
-
-// ---------------------------------------------------------------------
-/* print struct definition (fields etc)
- *************************************************************/
-void OutputStructUnion(Type* type, std::ostream &out)
-{
-    size_t i;
-    // sanity check
-    assert (type->is_aggregate());
-
-    if (!type->printed) { 
-        // output dependent structs, if any
-        for (i=0; i<type->fields.size(); i++) { 
-			if (type->fields[i]->is_aggregate()) {
-                OutputStructUnion((Type*)type->fields[i], out);
-            }
-        } 
-        // output myself
-        if (type->packed_) { 
-            out << "#pragma pack(push)";
-            really_outputln(out); 
-            out << "#pragma pack(1)";
-            really_outputln(out);
-        }
-        type->Output(out);
-        out << " {";
-		really_outputln(out);
-
-		assert(type->fields.size() == type->qfers_.size()); 
-		unsigned int j = 0;
-        for (i=0; i<type->fields.size(); i++) {
-            out << "   ";
-			const Type *field = type->fields[i];
-			bool is_bitfield = type->is_bitfield(i);
-            if (is_bitfield) {
-				assert(field->eType == eSimple);
-				type->qfers_[i].OutputFirstQuals(out);
-				if (field->simple_type == eInt)
-					out << "signed";
-				else if (field->simple_type == eUInt)
-					out << "unsigned";
-				else
-					assert(0);
-				int length = type->bitfields_length_[i];
-				assert(length >= 0);
-				if (length == 0)
-					out << " : ";
-				else
-					out << " f" << j++ << " : ";
-				out << length << ";";
-			}
-			else {
-				type->qfers_[i].output_qualified_type(field, out);
-				out << " f" << j++ << ";";
-			}
-			really_outputln(out);
-        }
-        out << "};";
-		really_outputln(out);
-
-        if (type->packed_) { 
-			out << "#pragma pack(pop)"; 
-			really_outputln(out);
-        }
-        type->printed = true;
-		really_outputln(out);
-    }
-}
-
-// ---------------------------------------------------------------------
-/* print all struct definitions (fields etc)
- *************************************************************/
-void
-OutputStructUnionDeclarations(std::ostream &out)
-{
-    size_t i;
-    output_comment_line(out, "--- Struct/Union Declarations ---");
-    for (i=0; i<AllTypes.size(); i++)
-    {
-        Type* t = AllTypes[i];
-        if (t->used && (t->eType == eStruct || t->eType == eUnion)) {
-            OutputStructUnion(AllTypes[i], out);
-        }
-    }
-}
+} 
 
 /*
  * return the printf directive string for the type. for example, int -> "%d"

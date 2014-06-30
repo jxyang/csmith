@@ -59,7 +59,7 @@
 #include "FactMgr.h"
 #include "VectorFilter.h"
 
-#include "OutputMgr.h"
+#include "AbsOutputMgr.h"
 
 using namespace std;
 
@@ -67,8 +67,7 @@ using namespace std;
 
 static vector<Function*> FuncList;		// List of all functions in the program
 static vector<FactMgr*>  FMList;        // list of fact managers for each function
-static long cur_func_idx;				// Index into FuncList that we are currently working on
-static bool param_first=true;			// Flag to track output of commas 
+static long cur_func_idx;				// Index into FuncList that we are currently working on 
 static int builtin_functions_cnt;
 
 /*
@@ -265,7 +264,7 @@ Function *
 Function::choose_func(vector<Function *> funcs,
 			const CGContext& cg_context,
 			const Type* type, 
-			const CVQualifiers* qfer)
+			const TypeQualifiers* qfer)
 {
 	vector<Function *> ok_funcs;
 	vector<Function *> ok_builtin_funcs;
@@ -340,7 +339,7 @@ GenerateParameterListFromString(Function &currFunc, const string &params_string)
 	}
 	for (int i = 0; i < params_cnt; i++) {
 		assert((vs[i] != "Void") && "Invalid parameter type!");
-		CVQualifiers qfer;
+		TypeQualifiers qfer;
 		qfer.add_qualifiers(false, false);
 		const Type *ty = Type::get_type_from_string(vs[0]);
 		Variable *v = VariableSelector::GenerateParameterVariable(ty, &qfer);
@@ -402,7 +401,7 @@ Function::Function(const string &name, const Type *return_type, bool builtin)
 }
 
 Function *
-Function::make_random_signature(const CGContext& cg_context, const Type* type, const CVQualifiers* qfer)
+Function::make_random_signature(const CGContext& cg_context, const Type* type, const TypeQualifiers* qfer)
 {
 	if (type == 0)
 		type = RandomReturnType(); 
@@ -411,7 +410,7 @@ Function::make_random_signature(const CGContext& cg_context, const Type* type, c
 		
 	// dummy variable representing return variable, we don't care about the type, so use 0
 	string rvname = f->name + "_" + "rv";
-	CVQualifiers ret_qfer = qfer==0 ? CVQualifiers::random_qualifiers(type, Effect::READ, cg_context, true) 
+	TypeQualifiers ret_qfer = qfer==0 ? TypeQualifiers::random_qualifiers(type, Effect::READ, cg_context, true) 
 		                            : qfer->random_qualifiers(true, Effect::READ, cg_context);
 	
 	f->rv = Variable::CreateVariable(rvname, type, NULL, &ret_qfer);
@@ -426,7 +425,7 @@ Function::make_random_signature(const CGContext& cg_context, const Type* type, c
  *
  */
 Function *
-Function::make_random(const CGContext& cg_context, const Type* type, const CVQualifiers* qfer)
+Function::make_random(const CGContext& cg_context, const Type* type, const TypeQualifiers* qfer)
 {
 	Function* f = make_random_signature(cg_context, type, qfer); 
 	
@@ -447,7 +446,7 @@ Function::make_first(void)
 	Function *f = new Function(RandomFunctionName(), ty);
 	// dummy variable representing return variable, we don't care about the type, so use 0
 	string rvname = f->name + "_" + "rv"; 
-	CVQualifiers ret_qfer = CVQualifiers::random_qualifiers(ty); 
+	TypeQualifiers ret_qfer = TypeQualifiers::random_qualifiers(ty); 
 	
 	f->rv = Variable::CreateVariable(rvname, ty, NULL, &ret_qfer);
 
@@ -468,124 +467,7 @@ Function::make_first(void)
 	// collect info about global dangling pointers
 	fm->find_dangling_global_ptrs(f);
 	return f;
-}
-
-/*
- *
- */
-static int
-OutputFormalParam(Variable *var, std::ostream *pOut)
-{
-	std::ostream &out = *pOut;
-	if ( !param_first ) out << ", ";
-	param_first = false;
-	//var->type->Output( out );
-	if (!CGOptions::arg_structs() && var->type)
-		assert(var->type->eType != eStruct);
-	if (!CGOptions::arg_unions() && var->type)
-		assert(var->type->eType != eUnion);
-		
-	var->output_qualified_type(out);
-	out << " " << var->name;
-    return 0;
-}
-
-/*
- *
- */
-void
-Function::OutputFormalParamList(std::ostream &out)
-{
-	if (param.size() == 0) {
-		assert(Type::void_type);
-		Type::void_type->Output(out);
-	} else {
-		param_first = true;
-		for_each(param.begin(),
-				 param.end(),
-				 std::bind2nd(std::ptr_fun(OutputFormalParam), &out));
-	}
-}
-
-/*
- *
- */
-void
-Function::OutputHeader(std::ostream &out)
-{
-	if (!CGOptions::return_structs() && return_type)
-		assert(return_type->eType != eStruct);
-	if (!CGOptions::return_unions() && return_type)
-		assert(return_type->eType != eUnion);
-	if (is_inlined)
-		out << "inline ";
-	// force functions to be static if necessary
-	if (CGOptions::force_globals_static()) {
-		out << "static ";
-	}
-	rv->qfer.output_qualified_type(return_type, out);
-	out << " " << get_prefixed_name(name) << "(";
-	OutputFormalParamList( out );
-	out << ")";
-}
-
-/*
- *
- */
-void
-Function::OutputForwardDecl(std::ostream &out)
-{
-	if (is_builtin)
-		return;
-	OutputHeader(out);
-	out << ";";
-	outputln(out);
-}
-
-/*
- *
- */
-void
-Function::Output(std::ostream &out)
-{
-	if (is_builtin)
-		return;
-	OutputMgr::set_curr_func(name);
-	output_comment_line(out, "------------------------------------------");
-	if (!CGOptions::concise()) {
-		feffect.Output(out);
-	}
-	OutputHeader(out);
-	outputln(out);
-
-	if (CGOptions::depth_protect()) {
-		out << "if (DEPTH < MAX_DEPTH) ";
-		outputln(out);
-	}
-
-	FactMgr* fm = get_fact_mgr_for_func(this);
-	// if nothing interesting happens, we don't want to see facts for statements
-	if (!fact_changed && !union_field_read && !is_pointer_referenced()) {
-		fm = 0;
-	}
-	body->Output(out, fm);
-
-	if (CGOptions::depth_protect()) {
-		out << "else";
-		outputln(out);
-
-		// TODO: Needs to be fixed when return types are no longer simple
-		// types.
-
-		out << "return ";
-		ret_c->Output(out);
-		out << ";";
-		outputln(out);
-	}
-
-	outputln(out);
-	outputln(out);
-}
+} 
 
 /*
  * Used for protecting depth
@@ -606,6 +488,15 @@ Function::make_return_const()
 bool Function::need_return_stmt()
 {
 	return (return_type->eType != eSimple || return_type->simple_type != eVoid);
+}
+
+bool Function::SanityCheck() const
+{
+	if (!CGOptions::return_structs() && return_type && return_type->eType != eStruct)
+		return false;
+	if (!CGOptions::return_unions() && return_type && return_type->eType != eUnion)
+		return false;
+	return true;
 }
 
 /*
@@ -746,7 +637,7 @@ Function::make_builtin_function(const string &function_string)
 
 	// dummy variable representing return variable, we don't care about the type, so use 0
 	string rvname = f->name + "_" + "rv"; 
-	CVQualifiers ret_qfer = CVQualifiers::random_qualifiers(ty); 
+	TypeQualifiers ret_qfer = TypeQualifiers::random_qualifiers(ty); 
 	f->rv = Variable::CreateVariable(rvname, ty, NULL, &ret_qfer);
 
 	// create a fact manager for this function, with empty global facts 
@@ -805,52 +696,17 @@ GenerateFunctions(void)
 		}
 	}
 	FactPointTo::aggregate_all_pointto_sets();
-}
-
-/*
- *
- */
-static int
-OutputForwardDecl(Function *func, std::ostream *pOut)
+} 
+  
+vector<const Function*> 
+Function::GetRandomFunctions(void)
 {
-	func->OutputForwardDecl(*pOut);
-	return 0;
-}
-
-/*
- *
- */
-static int
-OutputFunction(Function *func, std::ostream *pOut)
-{
-	func->Output(*pOut);
-	return 0;
-}
-
-/*
- *
- */
-void
-OutputForwardDeclarations(std::ostream &out)
-{
-	outputln(out);
-	outputln(out);
-	output_comment_line(out, "--- FORWARD DECLARATIONS ---");
-	for_each(FuncList.begin(), FuncList.end(),
-			 std::bind2nd(std::ptr_fun(OutputForwardDecl), &out));
-}
-
-/*
- *
- */
-void
-OutputFunctions(std::ostream &out)
-{
-	outputln(out);
-	outputln(out);
-	output_comment_line(out, "--- FUNCTIONS ---");
-	for_each(FuncList.begin(), FuncList.end(),
-			 std::bind2nd(std::ptr_fun(OutputFunction), &out));
+	vector<const Function*> funcs;
+	for (size_t i=0; i<FuncList.size(); i++) {
+		if (!FuncList[i]->is_builtin)
+			funcs.push_back(FuncList[i]);
+	}
+	return funcs;
 }
 
 /*

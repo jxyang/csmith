@@ -84,9 +84,7 @@ public:
 
 	virtual bool equal(const Fact& fact) const { return this == &fact; };
 
-	virtual void Output(std::ostream &out) const = 0;
-
-	virtual void OutputAssertion(std::ostream &out, const Statement* s = NULL) const; 
+	virtual std::string ToString(void) const = 0;
 
 	virtual const Variable* get_var(void) const { return 0;};
 

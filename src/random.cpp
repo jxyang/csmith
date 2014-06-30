@@ -38,7 +38,6 @@
 #include "RandomNumber.h"
 #include "Filter.h"
 #include "CGOptions.h"
-#include "AbsProgramGenerator.h"
 
 std::string get_prefixed_name(const std::string &name)
 {

@@ -47,7 +47,7 @@
 #include "StatementIf.h"
 #include "StatementReturn.h"
 #include "StatementAssign.h"
-#include "StatementExpr.h"
+#include "StatementCall.h"
 #include "StatementGoto.h"
 #include "StatementArrayOp.h"
 #include "Function.h"
@@ -58,6 +58,7 @@
 #include "ExpressionVariable.h"
 #include "Lhs.h"
 #include "CFGEdge.h"
+#include "AbsOutputMgr.h"
 
 using namespace std; 
  
@@ -638,44 +639,7 @@ FactMgr::remove_loop_local_facts(const Statement* s, FactVec& facts)
 		local_vars.insert(local_vars.end(), b->local_vars.begin(), b->local_vars.end());
 	} 
 	FactMgr::update_facts_for_oos_vars(local_vars, facts);
-}
-
-void
-FactMgr::output_assertions(std::ostream &out, const Statement* stm, int indent, bool post_condition)
-{
-	vector<Fact*> facts;  
-	if (!post_condition) {
-		facts = map_facts_in_final[stm];
-	} else {
-		find_updated_final_facts(stm, facts);
-	}
-	if (facts.empty()) return;
-
-	if (stm->eType == eFor || stm->eType == eIfElse) {
-		output_tab(out, indent);
-		std::ostringstream ss; 
-		ss << "facts after " << (stm->eType == eFor ? "for loop" : "branching");
-		output_comment_line(out, ss.str());
-	}
-	if (stm->eType == eAssign || stm->eType == eInvoke || stm->eType == eReturn) {
-		output_tab(out, indent);
-		std::ostringstream ss; 
-		ss << "statement id: " << stm->stm_id;
-		output_comment_line(out, ss.str());
-	}
-	for (size_t i=0; i<facts.size(); i++) {
-		const Fact* f = facts[i];
-		const Effect& eff = func->feffect;
-		const Variable* v = f->get_var();
-		assert(v);
-		// don't print facts regarding global variables that are neither read or written in this function
-		if (v->is_global() && !eff.is_read(v) && !eff.is_written(v)) {
-			continue;
-		}
-		output_tab(out, indent); 
-		f->OutputAssertion(out, stm);
-	}
-}
+} 
 
 void 
 FactMgr::find_updated_facts(const Statement* stm, vector<const Fact*>& facts)
